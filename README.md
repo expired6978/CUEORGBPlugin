@@ -44,7 +44,7 @@ This will disable OpenRGB from scanning Corsair devices and potentially breaking
 * Run iCUE
 
 OpenRGB should look like the following when iCUE connects:
-![OpenRGB](/screenshots/open_rgb_server.png)
+![OpenRGB](/screenshots/open_rgb_server.PNG)
 
 # Thirdparty Projects used
 
