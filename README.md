@@ -16,9 +16,11 @@ This plugin allows creating custom device layouts using json files and custom im
 * `devices.json` - This file maps devices by name given within OpenRGB and allows overriding the Default layout
  
 # Release Installation
+* Close iCUE completely by right-clicking in the task bar and pressing `Quit`
 * Copy contents of archive to `C:\Program Files (x86)\Corsair\CORSAIR iCUE Software` directly.
 
 # Manual Installation
+* Close iCUE completely by right-clicking in the task bar and pressing `Quit`
 * Copy `dist/plugins` folder to `C:\Program Files (x86)\Corsair\CORSAIR iCUE Software`
 * Copy built `dsound.dll` to `C:\Program Files (x86)\Corsair\CORSAIR iCUE Software`
 * Copy built `CUEORGBPlugin.dll` to `C:\Program Files (x86)\Corsair\CORSAIR iCUE Software\plugins\OpenRGB`
@@ -39,6 +41,10 @@ This will disable OpenRGB from scanning Corsair devices and potentially breaking
 * Run OpenRGB
 * Navigate to `SDK Server` tab
 * Press `Start Server`
+* Run iCUE
+
+OpenRGB should look like the following when iCUE connects:
+![OpenRGB](/screenshots/open_rgb_server.PNG)
 
 # Thirdparty Projects used
 
