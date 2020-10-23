@@ -1,0 +1,56 @@
+{
+	"OpenRGB": {
+		"Host": "127.0.0.1",
+		"Port": 6742,
+		"Client": "iCue Plugin"
+	},
+	"Defaults": {
+		"Motherboard": {
+			"Thumbnail": "images/motherboard/default/thumbnail.png",
+			"Image": "images/motherboard/default/promo.png",
+			"Zones": [
+				{"Zone": 0},
+				{"Zone": 1},
+				{"Zone": 2}
+			],
+			"Views": [
+				{"Image": "images/motherboard/default/device_view.png", "PolyGenerator": {"Zone": 0, "Rect": [0, 300, 300, 340], "Spacing": 5}},
+				{"Image": "images/motherboard/default/device_view.png", "PolyGenerator": {"Zone": 1, "Rect": [0, 300, 300, 340], "Spacing": 5}},
+				{"Image": "images/motherboard/default/device_view.png", "PolyGenerator": {"Zone": 2, "Rect": [0, 300, 300, 340], "Spacing": 5}}
+			]
+		},
+		"GPU": {
+			"Thumbnail": "images/gpu/default/thumbnail.png",
+			"Image": "images/gpu/default/promo.png",
+			"Zones": [
+				{"Zone": 0}
+			],
+			"Views": [
+				{"Image": "images/gpu/default/device_view.png", "PolyGenerator": {"Zone": 0, "Rect": [50, 0, 349, 24], "Spacing": 5}}
+			]
+		},
+		"Keyboard": {
+			"Thumbnail": "images/keyboard/default/thumbnail.png",
+			"Image": "images/keyboard/default/promo.jpg",
+			"Zones": [
+				{
+					"Zone": 0, 
+					"LEDs": [
+						{"Id": 1, "Index": 0, "Position": [1.5625, 1.375]},
+						{"Id": 2, "Index": 1, "Position": [1.3125, 1.375]}
+					]
+				}
+			],
+			"Views": [
+				{
+					"Image": "images/keyboard/default/device_view.jpg", 
+					"Mask": "images/keyboard/default/device_view_mask.png",
+					"Polygons": [
+						{"Id": 1, "Path": "M 155 111 L 233 111 L 233 166 L 155 166 Z"},
+						{"Id": 2, "Path": "M 262 111 L 340 111 L 340 166 L 262 166 Z"}
+					]
+				}
+			]
+		}
+	}
+}

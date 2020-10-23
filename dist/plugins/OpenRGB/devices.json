@@ -1,0 +1,27 @@
+[
+	{
+		"Name": "TRX40 AORUS PRO WIFI",
+		"Thumbnail": "images/motherboard/default/thumbnail.png",
+		"Image": "images/motherboard/default/promo.png",
+		"InheritDefault": false,
+		"Zones": [
+			{"Zone": "Motherboard"},
+			{"Zone": "D_LED1 Bottom"},
+			{"Zone": "D_LED2 Top"}
+		],
+		"Views": [
+			{
+				"Image": "images/motherboard/default/device_view.png",
+				"PolyGenerator": {"Zone": "Motherboard", "Rect": [0, 300, 300, 340], "Spacing": 5}
+			},
+			{
+				"Image": "images/motherboard/default/device_view.png",
+				"PolyGenerator": {"Zone": "D_LED1 Bottom", "Rect": [0, 300, 300, 340], "Spacing": 5}
+			},
+			{
+				"Image": "images/motherboard/default/device_view.png",
+				"PolyGenerator": {"Zone": "D_LED2 Top", "Rect": [0, 300, 300, 340], "Spacing": 5}
+			}
+		]
+	}
+]
