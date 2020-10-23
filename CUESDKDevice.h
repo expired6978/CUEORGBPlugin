@@ -61,11 +61,18 @@ struct CorsairLedViews
 	CorsairLedView* view;		// 04
 };
 
+enum class CorsairDeviceType : std::uint32_t
+{
+	CDT_Invalid = 0,
+	CDT_Keyboard,
+	CDT_Mouse
+};
+
 // 1C
 struct CorsairPluginDeviceInfo
 {
 	char* deviceName;					// 00 - UI name of the device
-	std::uint32_t deviceFeatures;		// 04 - Usually 1, 2 gives DPI as an option, 3 removes DPI but adds showing the LED ids?
+	CorsairDeviceType deviceType;		// 04
 	CorsairLedPositions* ledPositions;	// 08
 	CorsairPluginImage* thumbnail;		// 0C - Thumbnail shown when editing a device
 	char* deviceId;						// 10 - Unique name of the device, passed to other calls to determine what device it is

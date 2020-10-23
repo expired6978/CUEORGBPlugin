@@ -30,7 +30,7 @@ CorsairPluginDeviceInfo* CorsairPluginDevice::GetDeviceInfo()
 	CorsairPluginDeviceInfo* deviceInfo = static_cast<CorsairPluginDeviceInfo*>(malloc(sizeof(CorsairPluginDeviceInfo)));
 	deviceInfo->deviceName = _strdup(mDeviceInfo.deviceName.c_str());
 	deviceInfo->deviceId = _strdup(mDeviceInfo.deviceId.c_str());
-	deviceInfo->deviceFeatures = 1;
+	deviceInfo->deviceType = CorsairDeviceType::CDT_Keyboard; // We are using keyboard because it treats the polys as buttons and doesn't litter the screen with key buttons
 	deviceInfo->numberOfDeviceView = mDeviceViews.size();
 	if (mDeviceInfo.thumbnail.size())
 	{
@@ -204,8 +204,8 @@ bool CorsairPluginDevice::ReadZonesFromJson(const json& zone)
 			auto& ledMapping = mDeviceInfo.ledMapping[ledId];
 			ledMapping.first = zoneIndex;
 			ledMapping.second = led;
-			ledData.x = std::sin(M_PI * (led + 1) / ledCount) + 1;
-			ledData.y = std::cos(M_PI * (led + 1) / ledCount) + 1;
+			ledData.x = std::sin(2 * M_PI * (led + 1) / ledCount) + 1;
+			ledData.y = std::cos(2 * M_PI * (led + 1) / ledCount) + 1;
 		}
 	}
 
@@ -217,20 +217,27 @@ void CorsairPluginDevice::GetDeviceInfoFromJson(const json& settings, const json
 	mDeviceInfo.deviceName = mController->name;
 	mDeviceInfo.deviceId = mController->location;
 
-	const auto deviceDefault = settings["Defaults"][device_type_to_str(mController->type)];
-	if (deviceDefault.is_object())
+	auto deviceTypeName = device_type_to_str(mController->type);
+	if (settings.contains("Defaults"))
 	{
-		mDeviceInfo.thumbnail = deviceDefault["Thumbnail"];
-		mDeviceInfo.promo = deviceDefault["Image"];
-
-		if (deviceDefault["Zones"].is_array())
+		const auto defaults = settings["Defaults"];
+		if (defaults.contains(deviceTypeName))
 		{
-			for (const auto& zone : deviceDefault["Zones"])
+			auto deviceDefault = defaults[deviceTypeName];
+
+			mDeviceInfo.thumbnail = deviceDefault["Thumbnail"];
+			mDeviceInfo.promo = deviceDefault["Image"];
+
+			if (deviceDefault.contains("Zones") && deviceDefault["Zones"].is_array())
 			{
-				ReadZonesFromJson(zone);
+				for (const auto& zone : deviceDefault["Zones"])
+				{
+					ReadZonesFromJson(zone);
+				}
 			}
 		}
 	}
+	
 
 	json device;
 	for (const auto& deviceObject : devices)
@@ -252,9 +259,12 @@ void CorsairPluginDevice::GetDeviceInfoFromJson(const json& settings, const json
 			}
 		}
 
-		for (const auto& zone : device["Zones"])
+		if (device.contains("Zones") && device["Zones"].is_array())
 		{
-			ReadZonesFromJson(zone);
+			for (const auto& zone : device["Zones"])
+			{
+				ReadZonesFromJson(zone);
+			}
 		}
 	}
 }
