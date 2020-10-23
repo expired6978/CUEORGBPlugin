@@ -1,6 +1,9 @@
 # CUEORGBPlugin
  Custom iCUE plugin to control OpenRGB from within iCUE
  
+# Compiling
+Should be no major dependencies, built with Visual Studio Community 2019. 
+ 
 # Description
 This plugin allows creating custom device layouts using json files and custom images as well as generating some generic LED layouts if there is no defined device. Corsair has not released an official SDK for adding custom devices. The reverse engineering is contained in ```CUESDKDevice.h```. 
 
@@ -10,7 +13,10 @@ This plugin allows creating custom device layouts using json files and custom im
 * ```settings.json``` - This file specifies the default LED/Zone layout display of some devices in the event no specific device is found within ```devices.json```
 * ```devices.json``` - This file maps devices by name given within OpenRGB and allows overriding the Default layout
  
-# Installation
+# Release Installation
+* Copy contents of archive to ```C:\Program Files (x86)\Corsair\CORSAIR iCUE Software``` directly.
+
+# Manual Installation
 * Copy ```dist/plugins``` folder to ```C:\Program Files (x86)\Corsair\CORSAIR iCUE Software```
 * Copy built ```dsound.dll``` to ```C:\Program Files (x86)\Corsair\CORSAIR iCUE Software```
 * Copy built ```CUEORGBPlugin.dll``` to ```C:\Program Files (x86)\Corsair\CORSAIR iCUE Software\plugins\OpenRGB```
