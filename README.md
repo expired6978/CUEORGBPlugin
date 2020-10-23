@@ -23,14 +23,7 @@ This plugin allows creating custom device layouts using json files and custom im
 
 # Thirdparty Projects used
 
-CUESDK
-https://github.com/CorsairOfficial/cue-sdk
-
-OpenRGB
-https://gitlab.com/CalcProgrammer1/OpenRGB
-
-Json C++
-https://github.com/nlohmann/json
-
-SHA256
-https://github.com/okdshin/PicoSHA2
+* CUESDK - https://github.com/CorsairOfficial/cue-sdk
+* OpenRGB - https://gitlab.com/CalcProgrammer1/OpenRGB
+* Json C++ - https://github.com/nlohmann/json
+* SHA256 - https://github.com/okdshin/PicoSHA2
