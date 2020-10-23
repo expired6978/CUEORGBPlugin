@@ -1,0 +1,6 @@
+LIBRARY	"CUEORGBPlugin"
+EXPORTS
+CorsairPluginFreeInstance
+CorsairPluginGetAPIVersion
+CorsairPluginGetFeatures
+CorsairPluginGetInstance

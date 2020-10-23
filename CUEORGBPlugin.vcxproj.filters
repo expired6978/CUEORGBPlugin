@@ -1,0 +1,99 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Header Files\CUESDK">
+      <UniqueIdentifier>{28b22ee5-a288-44e4-9de0-64cebbe8261b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\json">
+      <UniqueIdentifier>{eb880aac-2d97-4e92-8299-786b3caf2dec}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\OpenRGB">
+      <UniqueIdentifier>{554632bb-f343-4283-abab-df219646a837}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\OpenRGB\RGBController">
+      <UniqueIdentifier>{85b595a2-96dd-45aa-9ee8-4e35d4d6b553}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\OpenRGB\net_port">
+      <UniqueIdentifier>{58d07bae-6faa-4a30-bc55-1f652b3facd9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\OpenRGB">
+      <UniqueIdentifier>{ad402db8-b4ab-400d-9409-68733bf348ad}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\OpenRGB\net_port">
+      <UniqueIdentifier>{666e7ab7-ad7e-44f9-b510-299bc6b70abe}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\OpenRGB\RGBController">
+      <UniqueIdentifier>{eb8bde11-6355-48ee-a47b-437607a44227}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="dllmain.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="thirdparty\OpenRGB\net_port\net_port.cpp">
+      <Filter>Source Files\OpenRGB\net_port</Filter>
+    </ClCompile>
+    <ClCompile Include="thirdparty\OpenRGB\RGBController\RGBController_Network.cpp">
+      <Filter>Source Files\OpenRGB\RGBController</Filter>
+    </ClCompile>
+    <ClCompile Include="thirdparty\OpenRGB\RGBController\RGBController.cpp">
+      <Filter>Source Files\OpenRGB\RGBController</Filter>
+    </ClCompile>
+    <ClCompile Include="thirdparty\OpenRGB\NetworkClient.cpp">
+      <Filter>Source Files\OpenRGB</Filter>
+    </ClCompile>
+    <ClCompile Include="thirdparty\OpenRGB\NetworkProtocol.cpp">
+      <Filter>Source Files\OpenRGB</Filter>
+    </ClCompile>
+    <ClCompile Include="CorsairPluginDevice.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CorsairPluginDeviceManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="CUESDKDevice.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="thirdparty\CUESDK\CorsairLedIdEnum.h">
+      <Filter>Header Files\CUESDK</Filter>
+    </ClInclude>
+    <ClInclude Include="thirdparty\json\json.hpp">
+      <Filter>Header Files\json</Filter>
+    </ClInclude>
+    <ClInclude Include="thirdparty\OpenRGB\NetworkClient.h">
+      <Filter>Header Files\OpenRGB</Filter>
+    </ClInclude>
+    <ClInclude Include="thirdparty\OpenRGB\NetworkProtocol.h">
+      <Filter>Header Files\OpenRGB</Filter>
+    </ClInclude>
+    <ClInclude Include="thirdparty\OpenRGB\RGBController\RGBController.h">
+      <Filter>Header Files\OpenRGB\RGBController</Filter>
+    </ClInclude>
+    <ClInclude Include="thirdparty\OpenRGB\RGBController\RGBController_Network.h">
+      <Filter>Header Files\OpenRGB\RGBController</Filter>
+    </ClInclude>
+    <ClInclude Include="thirdparty\OpenRGB\net_port\net_port.h">
+      <Filter>Header Files\OpenRGB\net_port</Filter>
+    </ClInclude>
+    <ClInclude Include="CorsairPluginDevice.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CorsairPluginDeviceManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
