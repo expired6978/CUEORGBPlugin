@@ -484,6 +484,26 @@ void NetworkClient::ProcessReply_ControllerData(unsigned int /*data_size*/, char
     }
     else
     {
+        bool resized = server_controllers[dev_idx]->zones.size() != new_controller->zones.size();
+        if (!resized)
+        {
+            for (std::size_t z = 0; z < new_controller->zones.size(); ++z)
+            {
+                if (server_controllers[dev_idx]->zones[z].leds_count != new_controller->zones[z].leds_count)
+                {
+                    resized = true;
+                    break;
+                }
+            }
+        }
+
+        if (resized)
+        {
+            server_controllers[dev_idx]->leds = new_controller->leds;
+            server_controllers[dev_idx]->zones = new_controller->zones;
+            server_controllers[dev_idx]->colors = new_controller->colors;
+        }
+
         server_controllers[dev_idx]->active_mode = new_controller->active_mode;
         delete new_controller;
     }

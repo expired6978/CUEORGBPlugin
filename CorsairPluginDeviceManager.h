@@ -1,11 +1,13 @@
 #pragma once
 
 #include <string>
+#include <unordered_set>
 #include <unordered_map>
 #include <vector>
 #include <cstdint>
 #include <mutex>
 #include <memory>
+#include <future>
 
 #include "CUESDKDevice.h"
 #include "CorsairPluginDevice.h"
@@ -40,8 +42,11 @@ protected:
 	nlohmann::json mDevices;
 
 private:
+	void UpdateDevices(std::unordered_set<std::string> deviceSet);
+
 	std::mutex mDeviceLock;
 	std::unordered_map<std::string, std::unique_ptr<CorsairPluginDevice>> mDeviceMap;
+	std::future<void> mDeviceUpdateRequest;
 	NetworkClient* mNetworkClient;
 	std::vector<RGBController*> mControllerList;
 

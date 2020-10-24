@@ -1,7 +1,9 @@
 #include "CorsairPluginDeviceManager.h"
 #include "NetworkClient.h"
 
+#include <future>
 #include <fstream>
+#include <unordered_set>
 
 void ClientChanged(void* arg)
 {
@@ -28,6 +30,10 @@ CorsairPluginDeviceManager::~CorsairPluginDeviceManager()
 	{
 		mNetworkClient->StopClient();
 		delete mNetworkClient;
+	}
+	if (mDeviceUpdateRequest.valid())
+	{
+		mDeviceUpdateRequest.wait();
 	}
 }
 
@@ -125,6 +131,23 @@ CorsairPluginDeviceView* CorsairPluginDeviceManager::GetDeviceView(const char* d
 	return nullptr;
 }
 
+void CorsairPluginDeviceManager::UpdateDevices(std::unordered_set<std::string> deviceSet)
+{
+	std::lock_guard<std::mutex> deviceLock(mDeviceLock);
+	for (auto deviceId : deviceSet)
+	{
+		auto it = mDeviceMap.find(deviceId);
+		if (it != mDeviceMap.end())
+		{
+			it->second->GetController()->SetCustomMode(); // Calls SendRequest_ControllerData and waits for response
+			if (it->second->ReadFromJson(mSettings, mDevices, true))
+			{
+				mDeviceCallback(mPluginContext, deviceId.c_str(), 1);
+			}
+		}
+	}
+}
+
 bool CorsairPluginDeviceManager::ReadJson()
 {
 	std::ifstream devices(mLocalFile(L"devices.json").c_str());
@@ -164,15 +187,42 @@ void CorsairPluginDeviceManager::ConnectDevices()
 	//std::lock_guard<std::mutex> networkLock(mNetworkClient->ControllerListMutex);
 	std::lock_guard<std::mutex> deviceLock(mDeviceLock);
 
+	std::unordered_set<std::string> deviceUpdate;
 	for (auto controller : mControllerList)
 	{
 		std::unique_ptr<CorsairPluginDevice> device = std::make_unique<CorsairPluginDevice>(controller);
 		device->SetImageHasher(mImageHasher);
-		device->ReadFromJson(mSettings, mDevices);
-		mDeviceCallback(mPluginContext, device->GetInfo().deviceId.c_str(), 1);
-		mDeviceMap.emplace(device->GetInfo().deviceId, std::move(device));
+		if (device->ReadFromJson(mSettings, mDevices))
+		{
+			// Device needs a resize, send the resize packet and re-request the controller data
+			if (device->GetResizeMap().size())
+			{
+				for (auto& zone : device->GetResizeMap())
+				{
+					controller->ResizeZone(zone.first, zone.second);
+					deviceUpdate.emplace(device->GetInfo().deviceId);
+				}
+			}
+			else
+			{
+				mDeviceCallback(mPluginContext, device->GetInfo().deviceId.c_str(), 1);
+			}
+
+			mDeviceMap.emplace(device->GetInfo().deviceId, std::move(device));
+		}
 	}
 
+	// If there's a device that's the wrong size, send a device update and wait for the response
+	// We need this in another thread because we call ConnectDevices from within the Changed devices callback, which has a lock on ControllerListMutex
+	if (deviceUpdate.size())
+	{
+		if (mDeviceUpdateRequest.valid())
+		{
+			mDeviceUpdateRequest.wait();
+		}
+
+		mDeviceUpdateRequest = std::async(std::launch::async, &CorsairPluginDeviceManager::UpdateDevices, this, deviceUpdate);
+	}
 }
 
 void CorsairPluginDeviceManager::DisconnectDevices()

@@ -50,11 +50,14 @@ public:
 	const DeviceViews& GetViews() const { return mDeviceViews; }
 	RGBController* GetController() const { return mController; }
 
-	bool ReadFromJson(const nlohmann::json& settings, const nlohmann::json& devices);
+	bool ReadFromJson(const nlohmann::json& settings, const nlohmann::json& devices, bool clear = false);
 
 	CorsairPluginDeviceInfo* GetDeviceInfo();
 	CorsairPluginDeviceView* GetDeviceView(std::int32_t index);
 	void SetImageHasher(std::function<std::string(const std::string&)> functor) { mImageHasher = functor; };
+
+	typedef std::unordered_map<std::uint32_t, std::uint32_t> ResizeMap;
+	ResizeMap& GetResizeMap() { return mZoneResize; }
 
 protected:
 	void GetDeviceInfoFromJson(const nlohmann::json& settings, const nlohmann::json& devices);
@@ -64,6 +67,7 @@ protected:
 	void ReadViewFromJson(const nlohmann::json& view, DeviceView& deviceView);
 
 private:
+	ResizeMap mZoneResize;
 	RGBController* mController;
 	std::function<std::string(const std::string&)> mImageHasher;
 	DeviceInfo mDeviceInfo;
