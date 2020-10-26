@@ -46,6 +46,13 @@ This will disable OpenRGB from scanning Corsair devices and potentially breaking
 OpenRGB should look like the following when iCUE connects:
 ![OpenRGB](/screenshots/open_rgb_server.PNG)
 
+# OpenRGB as a Startup process (Windows)
+You might want to start OpenRGB when you start windows as iCUE is also a Startup process, allowing OpenRGB to be started alongside will allow you to resume effects controlled by iCUE when both programs start
+* Win+R
+* `shell:startup`
+* Create shortcut to OpenRGB.exe
+* Add `--startminimized --server` to the end of the `Target` field
+
 # Thirdparty Projects used
 
 * CUESDK - https://github.com/CorsairOfficial/cue-sdk
