@@ -7,7 +7,7 @@ Should be no major dependencies, built with Visual Studio Community 2019.
 # Description
 This plugin allows creating custom device layouts using json files and custom images as well as generating some generic LED layouts if there is no defined device. Corsair has not released an official SDK for adding custom devices. The reverse engineering is contained in `CUESDKDevice.h`. 
 
-![Custom Device](/screenshots/custom_device_v4.png)
+![Custom Device](/screenshots/custom_device_v4.PNG)
 
 **Files of Importance**
 * `dsound.dll` - This is a wrapper dll to disable iCUE's signature check on plugins loaded from the Plugins folder. Normally iCUE will run WinVerifyTrust on all plugins it is attempting to load. I haven't determined whether it needs to be signed by Corsair specifically, this wrapper when placed in the Corsair iCUE program directory will disable this check entirely.
