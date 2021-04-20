@@ -179,14 +179,26 @@ DWORD WINAPI CUEHookThread(LPVOID Arg)
 	const IMAGE_NT_HEADERS* ntHeader = reinterpret_cast<const IMAGE_NT_HEADERS*>(reinterpret_cast<const std::uint8_t*>(dosHeader) + dosHeader->e_lfanew);
 	uintptr_t end = begin + ntHeader->OptionalHeader.SizeOfCode;
 	
+#if defined(_M_X64) || defined(__x86_64__)
+	static const std::int32_t CALL_OFFSET = 10;
+	static const std::int32_t CALL_ADDR_OFFSET = 14;
+	uintptr_t ValidatePluginSignature = FindPatternSimple(begin, (end - begin), (const BYTE*)"\xE9\x00\x00\x00\x00\x48\x8D\x4D\xB8\xE8\x00\x00\x00\x00\x84\xC0\x75", "x????xxxxx????xxx");
+#elif defined(_M_IX86) || defined(__i386__)
+    static const std::int32_t CALL_OFFSET = 2;
+    static const std::int32_t CALL_ADDR_OFFSET = 6;
 	uintptr_t ValidatePluginSignature = FindPatternSimple(begin, (end - begin), (const BYTE*)"\x50\xE8\x00\x00\x00\x00\x83\xC4\x04\x84\xC0\x75\x63", "xx????xxxxxxx");
+#else
+    static const std::int32_t CALL_OFFSET = 0;
+    static const std::int32_t CALL_ADDR_OFFSET = 0;
+	uintptr_t ValidatePluginSignature = 0;
+#endif
 	if (ValidatePluginSignature)
 	{
 		// Read the address for the validate plugin function
 		DWORD  oldProtect;
-		VirtualProtect((LPVOID)(ValidatePluginSignature + 2), sizeof(std::int32_t), PAGE_EXECUTE_READ, &oldProtect);
-		uintptr_t functionAddress = ValidatePluginSignature + *reinterpret_cast<std::int32_t*>(ValidatePluginSignature + 2) + 6;
-		VirtualProtect((LPVOID)(ValidatePluginSignature + 2), sizeof(std::int32_t), oldProtect, &oldProtect);
+		VirtualProtect((LPVOID)(ValidatePluginSignature + CALL_OFFSET), sizeof(std::int32_t), PAGE_EXECUTE_READ, &oldProtect);
+		uintptr_t functionAddress = ValidatePluginSignature + *reinterpret_cast<std::int32_t*>(ValidatePluginSignature + CALL_OFFSET) + CALL_ADDR_OFFSET;
+		VirtualProtect((LPVOID)(ValidatePluginSignature + CALL_OFFSET), sizeof(std::int32_t), oldProtect, &oldProtect);
 
 #ifdef CHECK_PLUGIN
 		// Read QString manipulation from Qt5Core

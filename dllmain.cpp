@@ -40,6 +40,7 @@ void OutputDebugMessage(const char* lpszFormat, ...)
 #endif
 
 std::unique_ptr<CorsairPluginDeviceManager> g_deviceManager;
+using CorsairGetInstance = CorsairGetInstance_v66;
 
 std::wstring GetLocalFile(const std::wstring& relativePath)
 {

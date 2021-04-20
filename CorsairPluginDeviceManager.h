@@ -42,7 +42,7 @@ protected:
 	nlohmann::json mDevices;
 
 private:
-	void UpdateDevices(std::unordered_set<std::string> deviceSet);
+	void UpdateDevices(std::unordered_set<std::string> deviceSet, bool notifyHost);
 
 	std::mutex mDeviceLock;
 	std::unordered_map<std::string, std::unique_ptr<CorsairPluginDevice>> mDeviceMap;

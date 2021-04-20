@@ -12,7 +12,7 @@
 
 #include <vector>
 
-#ifdef WIN32
+#if defined(_M_IX86) || defined(__i386__) || defined(_M_X64) || defined(__x86_64__)
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #else

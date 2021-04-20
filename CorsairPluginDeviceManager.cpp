@@ -131,7 +131,7 @@ CorsairPluginDeviceView* CorsairPluginDeviceManager::GetDeviceView(const char* d
 	return nullptr;
 }
 
-void CorsairPluginDeviceManager::UpdateDevices(std::unordered_set<std::string> deviceSet)
+void CorsairPluginDeviceManager::UpdateDevices(std::unordered_set<std::string> deviceSet, bool notifyHost)
 {
 	std::lock_guard<std::mutex> deviceLock(mDeviceLock);
 	for (auto deviceId : deviceSet)
@@ -140,7 +140,7 @@ void CorsairPluginDeviceManager::UpdateDevices(std::unordered_set<std::string> d
 		if (it != mDeviceMap.end())
 		{
 			it->second->GetController()->SetCustomMode(); // Calls SendRequest_ControllerData and waits for response
-			if (it->second->ReadFromJson(mSettings, mDevices, true))
+			if (it->second->ReadFromJson(mSettings, mDevices, true) && notifyHost)
 			{
 				mDeviceCallback(mPluginContext, deviceId.c_str(), 1);
 			}
@@ -195,6 +195,7 @@ void CorsairPluginDeviceManager::ConnectDevices()
 		if (device->ReadFromJson(mSettings, mDevices))
 		{
 			// Device needs a resize, send the resize packet and re-request the controller data
+			// We will delay sending the notification to the host until the new data has come back
 			if (device->GetResizeMap().size())
 			{
 				for (auto& zone : device->GetResizeMap())
@@ -221,7 +222,7 @@ void CorsairPluginDeviceManager::ConnectDevices()
 			mDeviceUpdateRequest.wait();
 		}
 
-		mDeviceUpdateRequest = std::async(std::launch::async, &CorsairPluginDeviceManager::UpdateDevices, this, deviceUpdate);
+		mDeviceUpdateRequest = std::async(std::launch::async, &CorsairPluginDeviceManager::UpdateDevices, this, deviceUpdate, true);
 	}
 }
 
