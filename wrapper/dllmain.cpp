@@ -7,13 +7,6 @@
 #include <cstdint>
 #include <string>
 
-#ifdef CHECK_PLUGIN
-#include <Shlwapi.h>
-#pragma comment(lib, "shlwapi.lib")
-#endif
-
-#include "MinHook.h"
-
 typedef HRESULT(WINAPI* DirectSoundCreateProc)(LPCGUID, LPDIRECTSOUND*, LPUNKNOWN);
 typedef HRESULT(WINAPI* DirectSoundEnumerateAProc)(LPDSENUMCALLBACKA, LPVOID);
 typedef HRESULT(WINAPI* DirectSoundEnumerateWProc)(LPDSENUMCALLBACKW, LPVOID);
@@ -40,131 +33,6 @@ DirectSoundFullDuplexCreateProc m_pDirectSoundFullDuplexCreate;
 DirectSoundCreate8Proc m_pDirectSoundCreate8;
 DirectSoundCaptureCreate8Proc m_pDirectSoundCaptureCreate8;
 
-uintptr_t FindPatternSimple(uintptr_t StartAddress, uintptr_t MaxSize, const BYTE* ByteMask, const char* Mask)
-{
-	auto compare = [](const BYTE* pData, const BYTE* bMask, const char* szMask)
-	{
-		for (; *szMask; ++szMask, ++pData, ++bMask)
-		{
-			if (*szMask == 'x' && *pData != *bMask)
-				return false;
-		}
-
-		return *szMask == '\0';
-	};
-
-	const size_t maskLen = strlen(Mask);
-	for (uintptr_t i = 0; i < MaxSize - maskLen; i++)
-	{
-		if (compare((BYTE*)(StartAddress + i), ByteMask, Mask))
-			return StartAddress + i;
-	}
-
-	return 0;
-}
-
-#ifdef CHECK_PLUGIN
-#define DEFINE_MEMBER_FN_LONG(className, functionName, retnType, ...)		\
-	static std::uintptr_t _##functionName##_Address;						\
-	typedef retnType (className::* _##functionName##_type)(__VA_ARGS__);	\
-																			\
-	inline _##functionName##_type * _##functionName##_GetPtr(void)			\
-	{																		\
-		return (_##functionName##_type *)&_##functionName##_Address;		\
-	}
-
-#define CALL_MEMBER_FN(obj, fn)	\
-	((*(obj)).*(*((obj)->_##fn##_GetPtr())))
-
-// We just need some memory to hold onto this, we don't actually care how big it is...
-class QString
-{
-public:
-	~QString()
-	{
-		CALL_MEMBER_FN(this, dtor)();
-	}
-
-	uintptr_t pad[5];
-
-	DEFINE_MEMBER_FN_LONG(QString, toWCharArray, int, wchar_t*);
-	DEFINE_MEMBER_FN_LONG(QString, dtor, void);
-};
-
-uintptr_t QString::_toWCharArray_Address = 0;
-uintptr_t QString::_dtor_Address = 0;
-
-class QIODevice
-{
-public:
-	virtual ~QIODevice();
-
-	virtual void Unk_01();
-	virtual void Unk_02();
-	virtual void Unk_03();
-	virtual void Unk_04();
-	virtual void Unk_05();
-	virtual void Unk_06();
-	virtual void Unk_07();
-	virtual void Unk_08();
-	virtual void Unk_09();
-	virtual void Unk_0A();
-	virtual void Unk_0B();
-	virtual void Unk_0C();
-	virtual void Unk_0D();
-	virtual void Unk_0E();
-	virtual void Unk_0F();
-	virtual void Unk_10();
-	virtual void Unk_11();
-	virtual void Unk_12();
-	virtual void Unk_13();
-	virtual void Unk_14();
-	virtual void Unk_15();
-	virtual void Unk_16();
-	virtual void Unk_17();
-	virtual void Unk_18();
-	virtual void Unk_19();
-	virtual void Unk_1A();
-};
-
-class QFileDevice : public QIODevice
-{
-public:
-	virtual ~QFileDevice();
-
-	// Offset 0x6C
-	virtual QString fileName() const;
-};
-
-class QFile : public QFileDevice
-{
-public:
-	virtual ~QFile();
-};
-#else
-struct QFile;
-#endif
-
-typedef bool (*_ValidateDevicePlugin)(QFile* device);
-_ValidateDevicePlugin g_validateDevicePluginOriginal = nullptr;
-bool ValidateDevicePlugin(QFile* file)
-{
-#ifdef CHECK_PLUGIN
-	QString str = file->fileName();
-	wchar_t path[MAX_PATH];
-	int length = CALL_MEMBER_FN(&str, toWCharArray)(path);
-	path[length] = 0;
-	wchar_t* fileName = PathFindFileNameW(path);
-	if (_wcsicmp(fileName, L"CUEORGBPlugin.dll") == 0)
-	{
-		return true;
-	}
-	return g_validateDevicePluginOriginal(file);
-#else
-	return true;
-#endif
-}
-
 DWORD WINAPI CUEHookThread(LPVOID Arg)
 {
 #ifdef _DEBUG
@@ -172,48 +40,18 @@ DWORD WINAPI CUEHookThread(LPVOID Arg)
 		::Sleep(100);
 #endif
 
-	HMODULE iCueDllModule = GetModuleHandle(_T("iCUE.dll"));
-	uintptr_t begin = reinterpret_cast<uintptr_t>(iCueDllModule);
+	HMODULE winTrustModule = GetModuleHandle(_T("WINTRUST.dll"));
+	FARPROC winVerifyTrust = GetProcAddress(winTrustModule, "WinVerifyTrust");
 
-	const IMAGE_DOS_HEADER* dosHeader = reinterpret_cast<const IMAGE_DOS_HEADER*>(iCueDllModule);
-	const IMAGE_NT_HEADERS* ntHeader = reinterpret_cast<const IMAGE_NT_HEADERS*>(reinterpret_cast<const std::uint8_t*>(dosHeader) + dosHeader->e_lfanew);
-	uintptr_t end = begin + ntHeader->OptionalHeader.SizeOfCode;
-	
-#if defined(_M_X64) || defined(__x86_64__)
-	static const std::int32_t CALL_OFFSET = 10;
-	static const std::int32_t CALL_ADDR_OFFSET = 14;
-	uintptr_t ValidatePluginSignature = FindPatternSimple(begin, (end - begin), (const BYTE*)"\xE9\x00\x00\x00\x00\x48\x8D\x4D\xB8\xE8\x00\x00\x00\x00\x84\xC0\x75", "x????xxxxx????xxx");
-#elif defined(_M_IX86) || defined(__i386__)
-    static const std::int32_t CALL_OFFSET = 2;
-    static const std::int32_t CALL_ADDR_OFFSET = 6;
-	uintptr_t ValidatePluginSignature = FindPatternSimple(begin, (end - begin), (const BYTE*)"\x50\xE8\x00\x00\x00\x00\x83\xC4\x04\x84\xC0\x75\x63", "xx????xxxxxxx");
-#else
-    static const std::int32_t CALL_OFFSET = 0;
-    static const std::int32_t CALL_ADDR_OFFSET = 0;
-	uintptr_t ValidatePluginSignature = 0;
-#endif
-	if (ValidatePluginSignature)
-	{
-		// Read the address for the validate plugin function
-		DWORD  oldProtect;
-		VirtualProtect((LPVOID)(ValidatePluginSignature + CALL_OFFSET), sizeof(std::int32_t), PAGE_EXECUTE_READ, &oldProtect);
-		uintptr_t functionAddress = ValidatePluginSignature + *reinterpret_cast<std::int32_t*>(ValidatePluginSignature + CALL_OFFSET) + CALL_ADDR_OFFSET;
-		VirtualProtect((LPVOID)(ValidatePluginSignature + CALL_OFFSET), sizeof(std::int32_t), oldProtect, &oldProtect);
+	BYTE bypass[] = { 0x31, 0xC0, 0xC3 };
+	// xor eax, eax
+	// ret
 
-#ifdef CHECK_PLUGIN
-		// Read QString manipulation from Qt5Core
-		HMODULE qtCoreModule = GetModuleHandle(_T("Qt5Core.dll"));
-		QString::_toWCharArray_Address = (uintptr_t)GetProcAddress(qtCoreModule, "?toWCharArray@QString@@QBEHPA_W@Z");
-		QString::_dtor_Address = (uintptr_t)GetProcAddress(qtCoreModule, "??1QString@@QAE@XZ");
-#endif
-
-		MH_STATUS status = MH_CreateHook((LPVOID)functionAddress, ValidateDevicePlugin, (LPVOID*)&g_validateDevicePluginOriginal);
-		if (status == MH_OK)
-		{
-			MH_EnableHook(MH_ALL_HOOKS);
-		}
-	}
-	
+	DWORD d, ds;
+	VirtualProtect((LPVOID)winVerifyTrust, 1, PAGE_EXECUTE_READWRITE, &d);
+	memcpy((PBYTE)winVerifyTrust, bypass, sizeof(bypass));
+	VirtualProtect((LPVOID)winVerifyTrust, 1, d, &ds);
+		
 	return 0;
 }
 
@@ -246,14 +84,11 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD fdwReason, LPVOID lpReserved)
 			m_pDirectSoundCreate8 = (DirectSoundCreate8Proc)GetProcAddress(dsounddll, "DirectSoundCreate8");
 			m_pDirectSoundCaptureCreate8 = (DirectSoundCaptureCreate8Proc)GetProcAddress(dsounddll, "DirectSoundCaptureCreate8");
 
-			MH_Initialize();
-
 			CUEHookThread(nullptr);
 			//CreateThread(nullptr, 0, CUEHookThread, nullptr, 0, nullptr);
 			break;
 
 		case DLL_PROCESS_DETACH:
-			MH_Uninitialize();
 			FreeLibrary(dsounddll);
 			break;
 	}
