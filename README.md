@@ -26,8 +26,8 @@ This plugin allows creating custom device layouts using json files and custom im
 * Copy built `CUEORGBPlugin.dll` to `C:\Program Files\Corsair\CORSAIR iCUE 4 Software\plugins\OpenRGB`
 
 # OpenRGB Installation
-* Download [OpenRGB x64](https://gitlab.com/CalcProgrammer1/OpenRGB/-/jobs/artifacts/master/download?job=build_windows_64) or [OpenRGB x86](https://gitlab.com/CalcProgrammer1/OpenRGB/-/jobs/artifacts/master/download?job=build_windows_32)
-* Place the folder anywhere
+* Download [OpenRGB x64](https://openrgb.org/releases/release_0.6/OpenRGB_0.6_Windows_64_405ff7f.zip) or [OpenRGB x86](https://openrgb.org/releases/release_0.6/OpenRGB_0.6_Windows_32_405ff7f.zip)
+* Extract archive to any location (eg. "%USERPROFILE%" for "C:\Users\%USERNAME%")
 * Create `disabled_devices.txt` in the same directory as `OpenRGB.exe` add the following contents:
 ```
 Corsair Dominator Platinum
