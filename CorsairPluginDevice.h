@@ -9,8 +9,18 @@
 
 class RGBController;
 
-struct CorsairPluginDeviceInfo;
-struct CorsairPluginDeviceView;
+namespace cue
+{
+namespace dev
+{
+namespace plugin
+{
+struct DeviceInfo;
+struct DeviceView;
+}
+}
+}
+
 
 struct LEDData
 {
@@ -52,8 +62,8 @@ public:
 
 	bool ReadFromJson(const nlohmann::json& settings, const nlohmann::json& devices, bool clear = false);
 
-	CorsairPluginDeviceInfo* GetDeviceInfo();
-	CorsairPluginDeviceView* GetDeviceView(std::int32_t index);
+	cue::dev::plugin::DeviceInfo* GetDeviceInfo();
+	cue::dev::plugin::DeviceView* GetDeviceView(std::int32_t index);
 	void SetImageHasher(std::function<std::string(const std::string&)> functor) { mImageHasher = functor; };
 
 	typedef std::unordered_map<std::uint32_t, std::uint32_t> ResizeMap;

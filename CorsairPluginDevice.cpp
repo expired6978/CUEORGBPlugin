@@ -27,20 +27,20 @@ bool CorsairPluginDevice::ReadFromJson(const nlohmann::json& settings, const nlo
 	{
 		return false;
 	}
-	
+
 	return true;
 }
 
-CorsairPluginDeviceInfo* CorsairPluginDevice::GetDeviceInfo()
+cue::dev::plugin::DeviceInfo* CorsairPluginDevice::GetDeviceInfo()
 {
-	CorsairPluginDeviceInfo* deviceInfo = static_cast<CorsairPluginDeviceInfo*>(malloc(sizeof(CorsairPluginDeviceInfo)));
+	cue::dev::plugin::DeviceInfo* deviceInfo = static_cast<cue::dev::plugin::DeviceInfo*>(malloc(sizeof(cue::dev::plugin::DeviceInfo)));
 	deviceInfo->deviceName = _strdup(mDeviceInfo.deviceName.c_str());
 	deviceInfo->deviceId = _strdup(mDeviceInfo.deviceId.c_str());
-	deviceInfo->deviceType = CorsairDeviceType::CDT_Keyboard; // We are using keyboard because it treats the polys as buttons and doesn't litter the screen with key buttons
-	deviceInfo->numberOfDeviceView = mDeviceViews.size();
+	deviceInfo->deviceType = cue::dev::plugin::DeviceType::Keyboard; // We are using keyboard because it treats the polys as buttons and doesn't litter the screen with key buttons
+	deviceInfo->numberOfDeviceView = static_cast<std::int32_t>(mDeviceViews.size());
 	if (mDeviceInfo.thumbnail.size())
 	{
-		deviceInfo->thumbnail = static_cast<CorsairPluginImage*>(malloc(sizeof(CorsairPluginImage)));
+		deviceInfo->thumbnail = static_cast<cue::dev::plugin::Image*>(malloc(sizeof(cue::dev::plugin::Image)));
 		deviceInfo->thumbnail->path = _strdup(mDeviceInfo.thumbnail.c_str());
 		deviceInfo->thumbnail->hash = mImageHasher ? _strdup(mImageHasher(mDeviceInfo.thumbnail).c_str()) : _strdup("");
 	}
@@ -48,10 +48,10 @@ CorsairPluginDeviceInfo* CorsairPluginDevice::GetDeviceInfo()
 	{
 		deviceInfo->thumbnail = nullptr;
 	}
-	
+
 	if (mDeviceInfo.promo.size())
 	{
-		deviceInfo->promoImage = static_cast<CorsairPluginImage*>(malloc(sizeof(CorsairPluginImage)));
+		deviceInfo->promoImage = static_cast<cue::dev::plugin::Image*>(malloc(sizeof(cue::dev::plugin::Image)));
 		deviceInfo->promoImage->path = _strdup(mDeviceInfo.promo.c_str());
 		deviceInfo->promoImage->hash = mImageHasher ? _strdup(mImageHasher(mDeviceInfo.promo).c_str()) : _strdup("");
 	}
@@ -59,18 +59,18 @@ CorsairPluginDeviceInfo* CorsairPluginDevice::GetDeviceInfo()
 	{
 		deviceInfo->promoImage = nullptr;
 	}
-	
-	deviceInfo->ledPositions = static_cast<CorsairLedPositions*>(malloc(sizeof(CorsairLedPositions)));
+
+	deviceInfo->ledPositions = static_cast<cue::dev::plugin::LedPositions*>(malloc(sizeof(cue::dev::plugin::LedPositions)));
 
 	std::int32_t totalLEDs = 0;
 	for (const auto& zone : mDeviceInfo.zones)
 	{
-		totalLEDs += zone.second.ledData.size();
+		totalLEDs += static_cast<std::int32_t>(zone.second.ledData.size());
 	}
 
 	deviceInfo->ledPositions->numberOfLed = totalLEDs;
-	deviceInfo->ledPositions->ledPosition = static_cast<CorsairLedPosition*>(malloc(sizeof(CorsairLedPosition) * totalLEDs));
-	memset(deviceInfo->ledPositions->ledPosition, 0, sizeof(CorsairLedPosition) * totalLEDs);
+	deviceInfo->ledPositions->ledPosition = static_cast<cue::dev::plugin::LedPosition*>(malloc(sizeof(cue::dev::plugin::LedPosition) * totalLEDs));
+	memset(deviceInfo->ledPositions->ledPosition, 0, sizeof(cue::dev::plugin::LedPosition) * totalLEDs);
 
 	std::int32_t index = 0;
 	for (const auto& zone : mDeviceInfo.zones)
@@ -88,7 +88,7 @@ CorsairPluginDeviceInfo* CorsairPluginDevice::GetDeviceInfo()
 	return deviceInfo;
 }
 
-CorsairPluginDeviceView* CorsairPluginDevice::GetDeviceView(std::int32_t index)
+cue::dev::plugin::DeviceView* CorsairPluginDevice::GetDeviceView(std::int32_t index)
 {
 	if (static_cast<size_t>(index) < mDeviceViews.size())
 	{
@@ -96,10 +96,10 @@ CorsairPluginDeviceView* CorsairPluginDevice::GetDeviceView(std::int32_t index)
 		std::advance(viewIt, index);
 		auto& view = viewIt->second;
 
-		CorsairPluginDeviceView* deviceView = static_cast<CorsairPluginDeviceView*>(malloc(sizeof(CorsairPluginDeviceView)));
+		cue::dev::plugin::DeviceView* deviceView = static_cast<cue::dev::plugin::DeviceView*>(malloc(sizeof(cue::dev::plugin::DeviceView)));
 		if (view.image.size())
 		{
-			deviceView->view = static_cast<CorsairPluginImage*>(malloc(sizeof(CorsairPluginImage)));
+			deviceView->view = static_cast<cue::dev::plugin::Image*>(malloc(sizeof(cue::dev::plugin::Image)));
 			deviceView->view->path = _strdup(view.image.c_str());
 			deviceView->view->hash = mImageHasher ? _strdup(mImageHasher(view.image).c_str()) : _strdup("");
 		}
@@ -110,7 +110,7 @@ CorsairPluginDeviceView* CorsairPluginDevice::GetDeviceView(std::int32_t index)
 
 		if (view.mask.size())
 		{
-			deviceView->mask = static_cast<CorsairPluginImage*>(malloc(sizeof(CorsairPluginImage)));
+			deviceView->mask = static_cast<cue::dev::plugin::Image*>(malloc(sizeof(cue::dev::plugin::Image)));
 			deviceView->mask->path = _strdup(view.mask.c_str());
 			deviceView->mask->hash = mImageHasher ? _strdup(mImageHasher(view.mask).c_str()) : _strdup("");
 		}
@@ -119,9 +119,9 @@ CorsairPluginDeviceView* CorsairPluginDevice::GetDeviceView(std::int32_t index)
 			deviceView->mask = nullptr;
 		}
 
-		deviceView->ledView = static_cast<CorsairLedViews*>(malloc(sizeof(CorsairLedViews)));
-		deviceView->ledView->numberOfLed = view.drawPath.size();
-		deviceView->ledView->view = static_cast<CorsairLedView*>(malloc(sizeof(CorsairLedView) * view.drawPath.size()));
+		deviceView->ledView = static_cast<cue::dev::plugin::LedViews*>(malloc(sizeof(cue::dev::plugin::LedViews)));
+		deviceView->ledView->numberOfLed = static_cast<std::int32_t>(view.drawPath.size());
+		deviceView->ledView->view = static_cast<cue::dev::plugin::LedView*>(malloc(sizeof(cue::dev::plugin::LedView) * view.drawPath.size()));
 
 		std::int32_t index = 0;
 		for (auto& led : view.drawPath)
@@ -129,7 +129,7 @@ CorsairPluginDeviceView* CorsairPluginDevice::GetDeviceView(std::int32_t index)
 			auto& ledAppearance = deviceView->ledView->view[index];
 			ledAppearance.ledId = static_cast<CorsairLedId>(led.first);
 			ledAppearance.path = _strdup(led.second.c_str());
-			ledAppearance.appearance = CorsairZoneAppearance::CZA_SVG_Path;
+			ledAppearance.appearance = cue::dev::plugin::ZoneAppearance::SVG_Path;
 			ledAppearance.text = nullptr;
 			index++;
 		}
@@ -160,7 +160,7 @@ bool CorsairPluginDevice::ReadZonesFromJson(const json& zone)
 		{
 			if (mController->zones[z].name == zone["Zone"])
 			{
-				zoneIndex = z;
+				zoneIndex = static_cast<std::int32_t>(z);
 				break;
 			}
 		}
@@ -277,7 +277,7 @@ void CorsairPluginDevice::GetDeviceInfoFromJson(const json& settings, const json
 			}
 		}
 	}
-	
+
 
 	json device;
 	for (const auto& deviceObject : devices)
@@ -333,7 +333,7 @@ void CorsairPluginDevice::ReadViewFromJson(const json& view, DeviceView& deviceV
 				{
 					if (mController->zones[z].name == polyGenerator["Zone"])
 					{
-						zoneIndex = z;
+						zoneIndex = static_cast<std::int32_t>(z);
 						break;
 					}
 				}
@@ -347,7 +347,7 @@ void CorsairPluginDevice::ReadViewFromJson(const json& view, DeviceView& deviceV
 				if (it != mDeviceInfo.zones.end())
 				{
 					std::size_t ledZoneCount = it->second.ledData.size();
-					std::int32_t totalSpacing = ledZoneCount ? (ledZoneCount - 1) * spacing : 0;
+					std::int32_t totalSpacing = ledZoneCount ? (static_cast<std::int32_t>(ledZoneCount) - 1) * spacing : 0;
 					std::int32_t left = rect[0];
 					std::int32_t top = rect[1];
 					std::int32_t right = rect[2];
@@ -356,7 +356,7 @@ void CorsairPluginDevice::ReadViewFromJson(const json& view, DeviceView& deviceV
 					std::int32_t totalWidth = right - left;
 					std::int32_t totalHeight = bottom - top;
 
-					std::int32_t rectWidth = std::abs(totalWidth - totalSpacing) / ledZoneCount;
+					std::int32_t rectWidth = std::abs(totalWidth - totalSpacing) / static_cast<std::int32_t>(ledZoneCount);
 
 					std::int32_t idx = 1;
 					for (const auto& led : it->second.ledData)
@@ -395,7 +395,7 @@ bool CorsairPluginDevice::GetDeviceViewFromJson(const json& settings, const json
 		{
 			for (std::size_t i = 0; i < deviceDefault["Views"].size(); ++i)
 			{
-				ReadViewFromJson(deviceDefault["Views"][i], mDeviceViews[i]);
+				ReadViewFromJson(deviceDefault["Views"][i], mDeviceViews[static_cast<std::int32_t>(i)]);
 			}
 		}
 	}
@@ -422,7 +422,7 @@ bool CorsairPluginDevice::GetDeviceViewFromJson(const json& settings, const json
 		for (std::size_t i = 0; i < device["Views"].size(); ++i)
 		{
 			auto& view = device["Views"][i];
-			ReadViewFromJson(view, mDeviceViews[i]);
+			ReadViewFromJson(view, mDeviceViews[static_cast<std::int32_t>(i)]);
 		}
 	}
 

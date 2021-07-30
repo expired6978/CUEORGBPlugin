@@ -12,7 +12,7 @@ void ClientChanged(void* arg)
 	pluginManager->ConnectDevices();
 }
 
-CorsairPluginDeviceManager::CorsairPluginDeviceManager(void* pluginContext, _DeviceConnectionStatusChangeCallback callback, 
+CorsairPluginDeviceManager::CorsairPluginDeviceManager(void* pluginContext, _DeviceConnectionStatusChangeCallback callback,
 	std::function<std::string(const std::string&)> imageHasher,
 	std::function<std::wstring(const std::wstring&)> localPath)
 	: mPluginContext(pluginContext)
@@ -59,7 +59,7 @@ void CorsairPluginDeviceManager::Start()
 				mNetworkClient->SetName(client.c_str());
 			}
 		}
-		
+
 		mNetworkClient->StartClient();
 	}
 }
@@ -69,7 +69,7 @@ void CorsairPluginDeviceManager::Stop()
 	mNetworkClient->StopClient();
 }
 
-bool CorsairPluginDeviceManager::SetColor(const char* deviceId, std::int32_t size, CorsairLedColor* ledsColors)
+bool CorsairPluginDeviceManager::SetColor(const char* deviceId, std::int32_t size, cue::dev::plugin::LedColor* ledsColors)
 {
 	std::lock_guard<std::mutex> networkLock(mNetworkClient->ControllerListMutex);
 	std::lock_guard<std::mutex> deviceLock(mDeviceLock);
@@ -89,7 +89,7 @@ bool CorsairPluginDeviceManager::SetColor(const char* deviceId, std::int32_t siz
 				controller->SetLED(controller->zones.at(zoneId).start_idx + zoneIndex, ToRGBColor(ledColor.r, ledColor.g, ledColor.b));
 			}
 		}
-		
+
 		controller->UpdateLEDs();
 		return true;
 	}
@@ -97,7 +97,7 @@ bool CorsairPluginDeviceManager::SetColor(const char* deviceId, std::int32_t siz
 	return false;
 }
 
-CorsairPluginDeviceInfo* CorsairPluginDeviceManager::GetDeviceInfo(const char* deviceId)
+cue::dev::plugin::DeviceInfo* CorsairPluginDeviceManager::GetDeviceInfo(const char* deviceId)
 {
 	std::lock_guard<std::mutex> networkLock(mNetworkClient->ControllerListMutex);
 	std::lock_guard<std::mutex> deviceLock(mDeviceLock);
@@ -111,7 +111,7 @@ CorsairPluginDeviceInfo* CorsairPluginDeviceManager::GetDeviceInfo(const char* d
 	return nullptr;
 }
 
-CorsairPluginDeviceView* CorsairPluginDeviceManager::GetDeviceView(const char* deviceId, std::int32_t index)
+cue::dev::plugin::DeviceView* CorsairPluginDeviceManager::GetDeviceView(const char* deviceId, std::int32_t index)
 {
 	std::lock_guard<std::mutex> networkLock(mNetworkClient->ControllerListMutex);
 	std::lock_guard<std::mutex> deviceLock(mDeviceLock);

@@ -3,95 +3,140 @@
 #include "CorsairLedIdEnum.h"
 #include <cstdint>
 
-struct CorsairEvent;
-
-enum class CorsairZoneAppearance : std::uint32_t
+template<typename Enum>
+struct EnableBitMaskOperators
 {
-	CZA_SVG_Path = 0,		// This seems to be a list of draw commands for a rectangle: "M 155 111 L 233 111 L 233 166 L 155 166 Z"
-	CZA_UI_Text = 1,		// Doesn't seem to work? This should be the flow where it takes a text key and converts to UI text
-	CZA_Literal_Text = 2	// Doesn't seem to work? This should be the flow that takes the text from 
+	static const bool enable = false;
 };
 
-enum CorsairSupportedFeatures : std::uint32_t
+template<typename Enum>
+typename std::enable_if<EnableBitMaskOperators<Enum>::enable, Enum>::type
+operator |(Enum lhs, Enum rhs)
 {
-	CPSF_KeyEvents = (1 << 0),
-	CPSF_KeyEventsConfiguration = (1 << 1),
-	CPSF_DetachedMode = (1 << 2),
-	CPSF_PluginProperties = (1 << 3),
-	CPSF_DeviceProperties = (1 << 4),
-	CPSF_DeviceChannels = (1 << 5)
+	using underlying = typename std::underlying_type<Enum>::type;
+	return static_cast<Enum>(
+		static_cast<underlying>(lhs) |
+		static_cast<underlying>(rhs)
+		);
+}
+template<typename Enum>
+typename std::enable_if<EnableBitMaskOperators<Enum>::enable, Enum>::type
+operator |=(Enum lhs, Enum rhs)
+{
+	lhs = lhs | rhs;
+	return lhs;
+}
+
+#define ENABLE_BITMASK_OPERATORS(x)  \
+template<>                           \
+struct EnableBitMaskOperators<x>     \
+{                                    \
+	static const bool enable = true; \
 };
 
-enum CorsairSensorType : std::uint32_t
+namespace cue
 {
-	CST_Invalid,
-	CST_Temperature,
-	CST_FanRpm,
-	CST_PumpRpm,
-	CST_Voltage,
-	CST_Current,
-	CST_Power
+namespace dev
+{
+namespace plugin
+{
+struct Event;
+
+enum class ZoneAppearance : std::uint32_t
+{
+	SVG_Path = 0,		// This seems to be a list of draw commands for a rectangle: "M 155 111 L 233 111 L 233 166 L 155 166 Z"
+	UI_Text = 1,		// Doesn't seem to work? This should be the flow where it takes a text key and converts to UI text
+	Literal_Text = 2	// Doesn't seem to work? This should be the flow that takes the text from 
 };
 
-enum CorsairPropertyFlags : std::uint32_t
+enum class SupportedFeatures : std::uint32_t
 {
-	CPF_CanRead = (1 << 0),
-	CPF_CanWrite = (1 << 1),
-	CPF_Indexed = (1 << 2)
+	KeyEvents = (1 << 0),
+	KeyEventsConfiguration = (1 << 1),
+	DetachedMode = (1 << 2),
+	PluginProperties = (1 << 3),
+	DeviceProperties = (1 << 4),
+	DeviceChannels = (1 << 5)
+};
+ENABLE_BITMASK_OPERATORS(SupportedFeatures);
+
+enum SensorType : std::uint32_t
+{
+	Invalid,
+	Temperature,
+	FanRpm,
+	PumpRpm,
+	Voltage,
+	Current,
+	Power
 };
 
-enum CorsairPluginPropertyId : std::uint32_t
+enum class PropertyFlags : std::uint32_t
 {
-	CPPI_Invalid,
-	CPPI_PropertiesList,
-	CPPI_Locale
+	CanRead = (1 << 0),
+	CanWrite = (1 << 1),
+	Indexed = (1 << 2)
+};
+ENABLE_BITMASK_OPERATORS(PropertyFlags);
+
+enum class PluginPropertyId : std::uint32_t
+{
+	Invalid,
+	PropertiesList,
+	Locale
 };
 
-enum CorsairDevicePropertyId : std::uint32_t
+enum class DevicePropertyId : std::uint32_t
 {
-	CPDPI_Invalid,
-	CPDPI_PropertiesList,
-	CPDPI_ChannelsCount,
-	CPDPI_ChannelName,
-	CPDPI_SensorsCount,
-	CPDPI_SensorType,
-	CPDPI_SensorName,
-	CPDPI_SensorValue,
-	CPDPI_FanPerformanceMode,
-	CPDPI_FanPerformanceModesList,
-	CPDPI_PerformanceCurveTemplateDefault,
-	CPDPI_SensorValueMin,
-	CPDPI_SensorValueMax,
-	CPDPI_SingleColorZonesList
+	Invalid,
+	PropertiesList,
+	ChannelsCount,
+	ChannelName,
+	SensorsCount,
+	SensorType,
+	SensorName,
+	SensorValue,
+	FanPerformanceMode,
+	FanPerformanceModesList,
+	PerformanceCurveTemplateDefault,
+	SensorValueMin,
+	SensorValueMax,
+	SingleColorZonesList
 };
 
-enum CorsairFanPerformanceMode : std::uint32_t
+struct PropertyData
 {
-	CFPM_Invalid,
-	CFPM_Default,
-	CFPM_Quiet,
-	CFPM_Balanced,
-	CFPM_Performance,
-	CFPM_FixedPwm,
-	CFPM_FixedRpm,
-	CFPM_Custom,
-	CFPM_ZeroRpm
+	void* data;				// 00 Data
+	std::int32_t count;		// 04
 };
 
-enum class CorsairPropertyDataType : std::uint32_t
+enum class FanPerformanceMode : std::uint32_t
 {
-	CPDT_Bool,
-	CPDT_Integer,
-	CPDT_Double,
-	CPDT_String,
-	CPDT_BoolArray = 16,
-	CPDT_IntegerArray,
-	CPDT_DoubleArray,
-	CPDT_StringArray,
-	CPDT_LedColorArray
+	Invalid,
+	Default,
+	Quiet,
+	Balanced,
+	Performance,
+	FixedPwm,
+	FixedRpm,
+	Custom,
+	ZeroRpm
 };
 
-enum CorsairMode : std::uint32_t
+enum class PropertyDataType : std::uint32_t
+{
+	Bool,
+	Integer,
+	Double,
+	String,
+	BoolArray = 16,
+	IntegerArray,
+	DoubleArray,
+	StringArray,
+	LedColorArray
+};
+
+enum class Mode : std::uint32_t
 {
 	Invalid,
 	Detached,
@@ -99,13 +144,13 @@ enum CorsairMode : std::uint32_t
 };
 
 // 08
-struct CorsairPluginImage
+struct Image
 {
 	char* path;		// 00
 	char* hash;		// 04 - This is a SHA256 of the image data at the provided path
 };
 
-struct CorsairLedColor		// contains information about led and its color.
+struct LedColor		// contains information about led and its color.
 {
 	CorsairLedId ledId;		// identifier of LED to set.
 	std::int32_t r;			// red   brightness[0..255].
@@ -114,7 +159,7 @@ struct CorsairLedColor		// contains information about led and its color.
 };
 
 // 20
-struct CorsairLedPosition
+struct LedPosition
 {
 	CorsairLedId ledId;		// 00
 	std::int32_t unk04;		// 04 - Don't know?
@@ -125,66 +170,69 @@ struct CorsairLedPosition
 };
 
 // 08
-struct CorsairLedPositions
+struct LedPositions
 {
 	std::int32_t		numberOfLed;	// 00
-	CorsairLedPosition* ledPosition;	// 04
+	LedPosition* ledPosition;	// 04
 };
 
 // 10
-struct CorsairLedView
+struct LedView
 {
 	CorsairLedId ledId;					// 00
 	char* path;							// 04
-	CorsairZoneAppearance appearance;	// 08
+	ZoneAppearance appearance;	// 08
 	char* text;							// 0C
 };
 
 // 08
-struct CorsairLedViews
+struct LedViews
 {
 	std::int32_t numberOfLed;	// 00
-	CorsairLedView* view;		// 04
+	LedView* view;		// 04
 };
 
-enum class CorsairDeviceType : std::uint32_t
+enum class DeviceType : std::uint32_t
 {
-	CDT_Invalid = 0,
-	CDT_Keyboard,
-	CDT_Mouse
+	Invalid = 0,
+	Keyboard,
+	Mouse
 };
 
 // 1C
-struct CorsairPluginDeviceInfo
+struct DeviceInfo
 {
 	char* deviceName;					// 00 - UI name of the device
-	CorsairDeviceType deviceType;		// 04
-	CorsairLedPositions* ledPositions;	// 08
-	CorsairPluginImage* thumbnail;		// 0C - Thumbnail shown when editing a device
+	DeviceType deviceType;		// 04
+	LedPositions* ledPositions;	// 08
+	Image* thumbnail;		// 0C - Thumbnail shown when editing a device
 	char* deviceId;						// 10 - Unique name of the device, passed to other calls to determine what device it is
 	std::int32_t numberOfDeviceView;	// 14 - Number of device views to display in the UI, this will result in multiple calls to CorsairPluginGetDeviceView with a different View index
-	CorsairPluginImage* promoImage;		// 18 - Image shown in the Devices summary
+	Image* promoImage;		// 18 - Image shown in the Devices summary
 };
 
 // 10
-struct CorsairPluginDeviceView
+struct DeviceView
 {
-	CorsairPluginImage* view;			// 00 - Image shown in the editing view of the device
-	CorsairPluginImage* mask;			// 04 - Masks the view image, white is opaque, black is transparent
-	CorsairLedViews*	ledView;		// 08
-	CorsairLedViews*	actionZones;	// 0C - I don't know what this is yet
+	Image* view;			// 00 - Image shown in the editing view of the device
+	Image* mask;			// 04 - Masks the view image, white is opaque, black is transparent
+	LedViews* ledView;		// 08
+	LedViews* actionZones;	// 0C - I don't know what this is yet
 };
+}
+}
+}
 
-typedef CorsairPluginDeviceInfo* (*_CorsairPluginGetDeviceInfo)(const char* deviceId);
-typedef bool (*_CorsairSetLedsColors)(const char* deviceId, std::int32_t size, CorsairLedColor* ledsColors);
+typedef cue::dev::plugin::DeviceInfo* (*_CorsairPluginGetDeviceInfo)(const char* deviceId);
+typedef bool (*_CorsairSetLedsColors)(const char* deviceId, std::int32_t size, cue::dev::plugin::LedColor* ledsColors);
 typedef std::int32_t(*_DeviceConnectionStatusChangeCallback)(void* context, const char* deviceName, std::int32_t unk3);
 typedef void (*_CorsairSubscribeForDeviceConnectionStatusChanges)(void* context, _DeviceConnectionStatusChangeCallback callback);
 typedef void (*_CorsairPluginUnsubscribeFromDeviceStatusChanges)();
-typedef CorsairPluginDeviceView* (*_CorsairPluginGetDeviceView)(const char* deviceId, std::int32_t index);
-typedef void (*_CorsairPluginFreeDeviceInfo)(CorsairPluginDeviceInfo* memory);
-typedef void (*_CorsairPluginFreeDeviceView)(CorsairPluginDeviceView* memory);
+typedef cue::dev::plugin::DeviceView* (*_CorsairPluginGetDeviceView)(const char* deviceId, std::int32_t index);
+typedef void (*_CorsairPluginFreeDeviceInfo)(cue::dev::plugin::DeviceInfo* memory);
+typedef void (*_CorsairPluginFreeDeviceView)(cue::dev::plugin::DeviceView* memory);
 typedef bool (*_CorsairConfigureKeyEvent)(void* unk1, std::int32_t unk2);
-typedef void (*CorsairEventHandler)(void* context, const CorsairEvent* event);
+typedef void (*CorsairEventHandler)(void* context, const cue::dev::plugin::Event* event);
 typedef bool (*_CorsairSubscribeForEvents)(CorsairEventHandler onEvent, void* context);
 typedef bool (*_CorsairUnsubscribeFromEvents)();
 typedef void (*_CorsairSetMode)(std::int32_t mode);
@@ -205,19 +253,15 @@ struct CorsairGetInstance_v66
 	_CorsairSetMode setMode;																		// 28
 };
 
-struct CorsairPropertyData
-{
-	void* data;				// 00 Data
-	std::int32_t count;		// 04
-};
+typedef bool (*_CorsairGetPluginPropertyInfo)(cue::dev::plugin::PluginPropertyId propertyId, std::int32_t index, cue::dev::plugin::PropertyDataType& dataType, cue::dev::plugin::PropertyFlags& flags);
+typedef cue::dev::plugin::PropertyData* (*_CorsairReadPluginPropertyData)(cue::dev::plugin::PluginPropertyId propertyId, std::int32_t index);
+typedef bool (*_CorsairWritePluginPropertyData)(cue::dev::plugin::PluginPropertyId propertyId, std::int32_t index, cue::dev::plugin::PropertyData&);
 
-typedef bool (*_CorsairGetDevicePropertyInfo)(const char* deviceId, CorsairDevicePropertyId propertyId, std::int32_t index, CorsairPropertyDataType& dataType, std::int32_t& flags);
-typedef bool (*_CorsairGetPluginPropertyInfo)(CorsairDevicePropertyId propertyId, std::int32_t index, CorsairPropertyDataType& dataType, std::int32_t& flags);
-typedef CorsairPropertyData* (*_CorsairReadDevicePropertyData)(const char* deviceId, CorsairDevicePropertyId propertyId, std::int32_t index);
-typedef CorsairPropertyData* (*_CorsairReadPluginPropertyData)(CorsairDevicePropertyId propertyId, std::int32_t index);
-typedef bool (*_CorsairWriteDevicePropertyData)(const char* deviceId, CorsairDevicePropertyId propertyId, std::int32_t index, CorsairPropertyData&);
-typedef bool (*_CorsairWritePluginPropertyData)(CorsairDevicePropertyId propertyId, std::int32_t index, CorsairPropertyData&);
-typedef void (*_CorsairFreePropertyData)(CorsairPropertyDataType dataType, CorsairPropertyData* data);
+typedef bool (*_CorsairGetDevicePropertyInfo)(const char* deviceId, cue::dev::plugin::DevicePropertyId propertyId, std::int32_t index, cue::dev::plugin::PropertyDataType& dataType, cue::dev::plugin::PropertyFlags& flags);
+typedef cue::dev::plugin::PropertyData* (*_CorsairReadDevicePropertyData)(const char* deviceId, cue::dev::plugin::DevicePropertyId propertyId, std::int32_t index);
+typedef bool (*_CorsairWriteDevicePropertyData)(const char* deviceId, cue::dev::plugin::DevicePropertyId propertyId, std::int32_t index, cue::dev::plugin::PropertyData&);
+
+typedef void (*_CorsairFreePropertyData)(cue::dev::plugin::PropertyDataType dataType, cue::dev::plugin::PropertyData* data);
 
 // 4C
 struct CorsairGetInstance_v67

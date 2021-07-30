@@ -19,7 +19,7 @@ class RGBController;
 class CorsairPluginDeviceManager
 {
 public:
-	CorsairPluginDeviceManager(void* pluginContext, _DeviceConnectionStatusChangeCallback callback, 
+	CorsairPluginDeviceManager(void* pluginContext, _DeviceConnectionStatusChangeCallback callback,
 		std::function<std::string(const std::string&)> imageHasher,
 		std::function<std::wstring(const std::wstring&)> localPath);
 	virtual ~CorsairPluginDeviceManager();
@@ -31,9 +31,9 @@ public:
 	virtual void DisconnectDevices();
 
 	// CUE Calls
-	virtual bool SetColor(const char* deviceId, std::int32_t size, CorsairLedColor* ledsColors);
-	virtual CorsairPluginDeviceInfo* GetDeviceInfo(const char* deviceId);
-	virtual CorsairPluginDeviceView* GetDeviceView(const char* deviceId, std::int32_t index);
+	virtual bool SetColor(const char* deviceId, std::int32_t size, cue::dev::plugin::LedColor* ledsColors);
+	virtual cue::dev::plugin::DeviceInfo* GetDeviceInfo(const char* deviceId);
+	virtual cue::dev::plugin::DeviceView* GetDeviceView(const char* deviceId, std::int32_t index);
 
 protected:
 	void* mPluginContext;
