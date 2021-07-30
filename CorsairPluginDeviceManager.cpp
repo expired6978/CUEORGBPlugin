@@ -60,19 +60,13 @@ void CorsairPluginDeviceManager::Start()
 			}
 		}
 		
-		if (mNetworkClient)
-		{
-			mNetworkClient->StartClient();
-		}
+		mNetworkClient->StartClient();
 	}
 }
 
 void CorsairPluginDeviceManager::Stop()
 {
-	if (mNetworkClient)
-	{
-		mNetworkClient->StopClient();
-	}
+	mNetworkClient->StopClient();
 }
 
 bool CorsairPluginDeviceManager::SetColor(const char* deviceId, std::int32_t size, CorsairLedColor* ledsColors)

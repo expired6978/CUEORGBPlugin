@@ -12,6 +12,92 @@ enum class CorsairZoneAppearance : std::uint32_t
 	CZA_Literal_Text = 2	// Doesn't seem to work? This should be the flow that takes the text from 
 };
 
+enum CorsairSupportedFeatures : std::uint32_t
+{
+	CPSF_KeyEvents = (1 << 0),
+	CPSF_KeyEventsConfiguration = (1 << 1),
+	CPSF_DetachedMode = (1 << 2),
+	CPSF_PluginProperties = (1 << 3),
+	CPSF_DeviceProperties = (1 << 4),
+	CPSF_DeviceChannels = (1 << 5)
+};
+
+enum CorsairSensorType : std::uint32_t
+{
+	CST_Invalid,
+	CST_Temperature,
+	CST_FanRpm,
+	CST_PumpRpm,
+	CST_Voltage,
+	CST_Current,
+	CST_Power
+};
+
+enum CorsairPropertyFlags : std::uint32_t
+{
+	CPF_CanRead = (1 << 0),
+	CPF_CanWrite = (1 << 1),
+	CPF_Indexed = (1 << 2)
+};
+
+enum CorsairPluginPropertyId : std::uint32_t
+{
+	CPPI_Invalid,
+	CPPI_PropertiesList,
+	CPPI_Locale
+};
+
+enum CorsairDevicePropertyId : std::uint32_t
+{
+	CPDPI_Invalid,
+	CPDPI_PropertiesList,
+	CPDPI_ChannelsCount,
+	CPDPI_ChannelName,
+	CPDPI_SensorsCount,
+	CPDPI_SensorType,
+	CPDPI_SensorName,
+	CPDPI_SensorValue,
+	CPDPI_FanPerformanceMode,
+	CPDPI_FanPerformanceModesList,
+	CPDPI_PerformanceCurveTemplateDefault,
+	CPDPI_SensorValueMin,
+	CPDPI_SensorValueMax,
+	CPDPI_SingleColorZonesList
+};
+
+enum CorsairFanPerformanceMode : std::uint32_t
+{
+	CFPM_Invalid,
+	CFPM_Default,
+	CFPM_Quiet,
+	CFPM_Balanced,
+	CFPM_Performance,
+	CFPM_FixedPwm,
+	CFPM_FixedRpm,
+	CFPM_Custom,
+	CFPM_ZeroRpm
+};
+
+enum class CorsairPropertyDataType : std::uint32_t
+{
+	CPDT_Bool,
+	CPDT_Integer,
+	CPDT_Double,
+	CPDT_String,
+	CPDT_BoolArray = 16,
+	CPDT_IntegerArray,
+	CPDT_DoubleArray,
+	CPDT_StringArray,
+	CPDT_LedColorArray
+};
+
+enum CorsairMode : std::uint32_t
+{
+	Invalid,
+	Detached,
+	Attached
+};
+
 // 08
 struct CorsairPluginImage
 {
@@ -83,10 +169,10 @@ struct CorsairPluginDeviceInfo
 // 10
 struct CorsairPluginDeviceView
 {
-	CorsairPluginImage* view;		// 00 - Image shown in the editing view of the device
-	CorsairPluginImage* mask;		// 04 - Masks the view image, white is opaque, black is transparent
-	CorsairLedViews*	ledView;	// 08
-	CorsairLedViews*	unk0C;		// 0C - I don't know why there are 2 of these
+	CorsairPluginImage* view;			// 00 - Image shown in the editing view of the device
+	CorsairPluginImage* mask;			// 04 - Masks the view image, white is opaque, black is transparent
+	CorsairLedViews*	ledView;		// 08
+	CorsairLedViews*	actionZones;	// 0C - I don't know what this is yet
 };
 
 typedef CorsairPluginDeviceInfo* (*_CorsairPluginGetDeviceInfo)(const char* deviceId);
@@ -106,97 +192,53 @@ typedef void (*_CorsairSetMode)(std::int32_t mode);
 // 2C
 struct CorsairGetInstance_v66
 {
-	_CorsairPluginGetDeviceInfo CorsairPluginGetDeviceInfo;													// 00
-	_CorsairSetLedsColors CorsairPluginSetLedsColors;														// 04
-	_CorsairSubscribeForDeviceConnectionStatusChanges CorsairSubscribeForDeviceConnectionStatusChanges;		// 08
-	_CorsairPluginUnsubscribeFromDeviceStatusChanges CorsairPluginUnsubscribeFromDeviceStatusChanges;		// 0C
-	_CorsairPluginGetDeviceView CorsairPluginGetDeviceView;													// 10
-	_CorsairPluginFreeDeviceInfo CorsairPluginFreeDeviceInfo;												// 14
-	_CorsairPluginFreeDeviceView CorsairPluginFreeDeviceView;												// 18
-	_CorsairConfigureKeyEvent CorsairConfigureKeyEvent;														// 1C
-	_CorsairSubscribeForEvents CorsairSubscribeForEvents;													// 20
-	_CorsairUnsubscribeFromEvents CorsairUnsubscribeFromEvents;												// 24
-	_CorsairSetMode CorsairSetMode;																			// 28
+	_CorsairPluginGetDeviceInfo getDeviceInfo;														// 00
+	_CorsairSetLedsColors setLedsColors;															// 04
+	_CorsairSubscribeForDeviceConnectionStatusChanges subscribeForDeviceConnectionStatusChanges;	// 08
+	_CorsairPluginUnsubscribeFromDeviceStatusChanges unsubscribeFromDeviceConnectionStatusChanges;	// 0C
+	_CorsairPluginGetDeviceView getDeviceView;														// 10
+	_CorsairPluginFreeDeviceInfo freeDeviceInfo;													// 14
+	_CorsairPluginFreeDeviceView freeDeviceView;													// 18
+	_CorsairConfigureKeyEvent configureKeyEvent;													// 1C
+	_CorsairSubscribeForEvents subscribeForEvents;													// 20
+	_CorsairUnsubscribeFromEvents unsubscribeFromEvents;											// 24
+	_CorsairSetMode setMode;																		// 28
 };
 
-
-// Don't know what this does yet, Nvidia Plugin
-/*
-
-	switch ( a2 )
-	{
-	  case 1:
-		*a4 = 0x11;
-		*a5 = 1;
-		return true;
-		break;
-	  case 2:
-	  case 3:
-	  case 8:
-		return false;
-	  case 4:
-		*a4 = 1;
-		*a5 = 1;
-		return true;
-		break;
-	  case 5:
-	  case 7:
-		*a4 = 1;
-		*a5 = 5;
-		return true;
-		break;
-	  case 6:
-		*a4 = 3;
-		*a5 = 5;
-		return true;
-		break;
-	}
-
-*/
-typedef bool (*_CorsairUnk38)(const char* unk1, std::int32_t a2, std::int32_t a3, std::int32_t* a4, std::int32_t* a5);
-
-
-// Don't know what this is yet either
-struct CorsairUnk3CData
+struct CorsairPropertyData
 {
-	std::int32_t* unk00; // 00 - Number list, not sure what yet
-	std::int32_t count;  // 04
+	void* data;				// 00 Data
+	std::int32_t count;		// 04
 };
 
-// Does something different based off a2: 
-// 1 allocates the return with a list of numbers
-// 2,3,8 Do nothing
-// 4,5,6,7 do something different
-typedef CorsairUnk3CData* (*_CorsairUnk3C)(const char* unk1, std::int32_t a2, std::int32_t a3);
-
-typedef bool (*_CorsairUnk40)(const char* unk1);
-
-// Looks like it's intended to free something based off a2
-// 3,16,17,18 free *a2 and a2
-// 4,5,6,7,8,9,10,11,12,13,14,15 free a2
-// 19 free (*a2)[0 .. *(a2 + 4)] then free a2
-typedef void (*_CorsairUnk44)(std::int32_t a1, void* a2);
+typedef bool (*_CorsairGetDevicePropertyInfo)(const char* deviceId, CorsairDevicePropertyId propertyId, std::int32_t index, CorsairPropertyDataType& dataType, std::int32_t& flags);
+typedef bool (*_CorsairGetPluginPropertyInfo)(CorsairDevicePropertyId propertyId, std::int32_t index, CorsairPropertyDataType& dataType, std::int32_t& flags);
+typedef CorsairPropertyData* (*_CorsairReadDevicePropertyData)(const char* deviceId, CorsairDevicePropertyId propertyId, std::int32_t index);
+typedef CorsairPropertyData* (*_CorsairReadPluginPropertyData)(CorsairDevicePropertyId propertyId, std::int32_t index);
+typedef bool (*_CorsairWriteDevicePropertyData)(const char* deviceId, CorsairDevicePropertyId propertyId, std::int32_t index, CorsairPropertyData&);
+typedef bool (*_CorsairWritePluginPropertyData)(CorsairDevicePropertyId propertyId, std::int32_t index, CorsairPropertyData&);
+typedef void (*_CorsairFreePropertyData)(CorsairPropertyDataType dataType, CorsairPropertyData* data);
 
 // 4C
 struct CorsairGetInstance_v67
 {
-	_CorsairPluginGetDeviceInfo CorsairPluginGetDeviceInfo;													// 00
-	_CorsairSetLedsColors CorsairPluginSetLedsColors;														// 04
-	_CorsairSubscribeForDeviceConnectionStatusChanges CorsairSubscribeForDeviceConnectionStatusChanges;		// 08
-	_CorsairPluginUnsubscribeFromDeviceStatusChanges CorsairPluginUnsubscribeFromDeviceStatusChanges;		// 0C
-	_CorsairPluginGetDeviceView CorsairPluginGetDeviceView;													// 10
-	_CorsairPluginFreeDeviceInfo CorsairPluginFreeDeviceInfo;												// 14
-	_CorsairPluginFreeDeviceView CorsairPluginFreeDeviceView;												// 18
-	_CorsairConfigureKeyEvent CorsairConfigureKeyEvent;														// 1C
-	_CorsairSubscribeForEvents CorsairSubscribeForEvents;													// 20
-	_CorsairUnsubscribeFromEvents CorsairUnsubscribeFromEvents;												// 24
-	_CorsairSetMode CorsairSetMode;																			// 28
-	void* Unk2C;																							// 2C
-	void* Unk30;																							// 30
-	void* Unk34;																							// 34
-	_CorsairUnk38 CorsairUnk38;																				// 38 Exists in Nvidia Plugin
-	_CorsairUnk3C CorsairUnk3C;																				// 3C Exists in Nvidia Plugin
-	_CorsairUnk40 CorsairUnk40;																				// 40 Exists in Nvidia Plugin
-	_CorsairUnk44 CorsairUnk44;																				// 44 Exists in Nvidia Plugin
-	void* Unk48;																							// 48
+	_CorsairPluginGetDeviceInfo getDeviceInfo;														// 00
+	_CorsairSetLedsColors setLedsColors;															// 04
+	_CorsairSubscribeForDeviceConnectionStatusChanges subscribeForDeviceConnectionStatusChanges;	// 08
+	_CorsairPluginUnsubscribeFromDeviceStatusChanges unsubscribeFromDeviceConnectionStatusChanges;	// 0C
+	_CorsairPluginGetDeviceView getDeviceView;														// 10
+	_CorsairPluginFreeDeviceInfo freeDeviceInfo;													// 14
+	_CorsairPluginFreeDeviceView freeDeviceView;													// 18
+	_CorsairConfigureKeyEvent configureKeyEvent;													// 1C
+	_CorsairSubscribeForEvents subscribeForEvents;													// 20
+	_CorsairUnsubscribeFromEvents unsubscribeFromEvents;											// 24
+	_CorsairSetMode setMode;																		// 28
+	_CorsairGetPluginPropertyInfo getPropertyInfo;													// 2C
+	_CorsairReadPluginPropertyData readPropertyData;												// 30
+	_CorsairWritePluginPropertyData writePropertyData;												// 34
+	_CorsairGetDevicePropertyInfo getDevicePropertyInfo;											// 38
+	_CorsairReadDevicePropertyData readDevicePropertyData;											// 3C
+	_CorsairWriteDevicePropertyData writeDevicePropertyData;										// 40
+	_CorsairFreePropertyData freePropertyData;														// 44
+	void* setLedsColorsAtChannel;																	// 48
 };

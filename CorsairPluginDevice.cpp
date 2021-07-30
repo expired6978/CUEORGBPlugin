@@ -133,7 +133,7 @@ CorsairPluginDeviceView* CorsairPluginDevice::GetDeviceView(std::int32_t index)
 			ledAppearance.text = nullptr;
 			index++;
 		}
-		deviceView->unk0C = nullptr;
+		deviceView->actionZones = nullptr;
 
 		return deviceView;
 	}
