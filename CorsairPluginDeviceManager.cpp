@@ -17,7 +17,7 @@ CorsairPluginDeviceManager::CorsairPluginDeviceManager(void* pluginContext, _Dev
 	std::function<std::wstring(const std::wstring&)> localPath)
 	: mPluginContext(pluginContext)
 	, mDeviceCallback(callback)
-	, mNetworkClient(new NetworkClient(mControllerList))
+	, mNetworkClient(std::make_unique<NetworkClient>(mControllerList))
 	, mImageHasher(imageHasher)
 	, mLocalFile(localPath)
 {
@@ -29,7 +29,6 @@ CorsairPluginDeviceManager::~CorsairPluginDeviceManager()
 	if (mNetworkClient)
 	{
 		mNetworkClient->StopClient();
-		delete mNetworkClient;
 	}
 	if (mDeviceUpdateRequest.valid())
 	{
@@ -43,11 +42,10 @@ void CorsairPluginDeviceManager::Start()
 	{
 		if (mSettings.contains("OpenRGB"))
 		{
-			auto openRGB = mSettings["OpenRGB"];
+			const auto& openRGB = mSettings["OpenRGB"];
 			if (openRGB.contains("Host"))
 			{
-				std::string host = openRGB["Host"];
-				mNetworkClient->SetIP(host.c_str());
+				mNetworkClient->SetIP(openRGB["Host"].get<std::string>().c_str());
 			}
 			if (openRGB.contains("Port"))
 			{
@@ -55,8 +53,7 @@ void CorsairPluginDeviceManager::Start()
 			}
 			if (openRGB.contains("Client"))
 			{
-				std::string client = openRGB["Client"];
-				mNetworkClient->SetName(client.c_str());
+				mNetworkClient->SetName(openRGB["Client"].get<std::string>().c_str());
 			}
 		}
 
@@ -81,7 +78,7 @@ bool CorsairPluginDeviceManager::SetColor(const char* deviceId, std::int32_t siz
 		for (std::int32_t i = 0; i < size; ++i)
 		{
 			auto& ledColor = ledsColors[i];
-			auto ledIt = it->second->GetInfo().ledMapping.find(ledsColors[i].ledId);
+			auto ledIt = it->second->GetInfo().ledMapping.find(ledColor.ledId);
 			if (ledIt != it->second->GetInfo().ledMapping.end())
 			{
 				std::uint32_t zoneId = ledIt->second.first;
@@ -105,7 +102,7 @@ cue::dev::plugin::DeviceInfo* CorsairPluginDeviceManager::GetDeviceInfo(const ch
 	auto it = mDeviceMap.find(deviceId);
 	if (it != mDeviceMap.end())
 	{
-		return it->second->GetDeviceInfo();
+		return it->second->CreateDeviceInfo();
 	}
 
 	return nullptr;
@@ -119,7 +116,7 @@ cue::dev::plugin::DeviceView* CorsairPluginDeviceManager::GetDeviceView(const ch
 	auto it = mDeviceMap.find(deviceId);
 	if (it != mDeviceMap.end())
 	{
-		return it->second->GetDeviceView(index);
+		return it->second->CreateDeviceView(index);
 	}
 
 	return nullptr;
@@ -128,7 +125,7 @@ cue::dev::plugin::DeviceView* CorsairPluginDeviceManager::GetDeviceView(const ch
 void CorsairPluginDeviceManager::UpdateDevices(std::unordered_set<std::string> deviceSet, bool notifyHost)
 {
 	std::lock_guard<std::mutex> deviceLock(mDeviceLock);
-	for (auto deviceId : deviceSet)
+	for (auto& deviceId : deviceSet)
 	{
 		auto it = mDeviceMap.find(deviceId);
 		if (it != mDeviceMap.end())
@@ -178,7 +175,6 @@ bool CorsairPluginDeviceManager::ReadJson()
 
 void CorsairPluginDeviceManager::ConnectDevices()
 {
-	//std::lock_guard<std::mutex> networkLock(mNetworkClient->ControllerListMutex);
 	std::lock_guard<std::mutex> deviceLock(mDeviceLock);
 
 	std::unordered_set<std::string> deviceUpdate;
@@ -222,7 +218,6 @@ void CorsairPluginDeviceManager::ConnectDevices()
 
 void CorsairPluginDeviceManager::DisconnectDevices()
 {
-	//std::lock_guard<std::mutex> networkLock(mNetworkClient->ControllerListMutex);
 	std::lock_guard<std::mutex> deviceLock(mDeviceLock);
 
 	for (auto& device : mDeviceMap)

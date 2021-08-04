@@ -47,6 +47,9 @@ using CorsairGetInstance = CorsairGetInstance_v67;
 using CorsairGetInstance = CorsairGetInstance_v66;
 #endif
 
+//#define SUSPEND_API
+#define CHANNELS
+
 std::wstring GetLocalFile(const std::wstring& relativePath)
 {
 	wchar_t path[MAX_PATH] = { 0 };
@@ -69,23 +72,17 @@ std::string GetImageHash(const std::string& relativePath)
 
 cue::dev::plugin::DeviceInfo* CorsairPluginGetDeviceInfo(const char* deviceId)
 {
+#ifdef SUSPEND_API
+	while (!::IsDebuggerPresent())
+		::Sleep(100);
+#endif
 	OutputDebugMessage("CorsairPluginGetDeviceInfo: %s", deviceId);
-	if (g_deviceManager)
-	{
-		return g_deviceManager->GetDeviceInfo(deviceId);
-	}
-
-	return nullptr;
+	return g_deviceManager ? g_deviceManager->GetDeviceInfo(deviceId) : nullptr;
 }
 
 bool CorsairSetLedsColors(const char* deviceId, std::int32_t size, cue::dev::plugin::LedColor* ledsColors)
 {
-	if (g_deviceManager)
-	{
-		return g_deviceManager->SetColor(deviceId, size, ledsColors);
-	}
-
-	return false;
+	return g_deviceManager ? g_deviceManager->SetColor(deviceId, size, ledsColors) : false;
 }
 
 void CorsairSetMode(std::int32_t mode)
@@ -115,133 +112,24 @@ bool CorsairUnsubscribeFromEvents()
 cue::dev::plugin::DeviceView* CorsairPluginGetDeviceView(const char* deviceId, std::int32_t viewId)
 {
 	OutputDebugMessage("CorsairPluginGetDeviceView: %s - %d", deviceId, viewId);
-	if (g_deviceManager)
-	{
-		return g_deviceManager->GetDeviceView(deviceId, viewId);
-	}
-
-	return nullptr;
+	return g_deviceManager ? g_deviceManager->GetDeviceView(deviceId, viewId) : nullptr;
 }
 
 void CorsairPluginFreeDeviceInfo(cue::dev::plugin::DeviceInfo* deviceInfo)
 {
 	OutputDebugMessage("CorsairPluginFreeDeviceInfo: %08X", deviceInfo);
-
-	if (deviceInfo->ledPositions)
-	{
-		if (deviceInfo->ledPositions->ledPosition)
-		{
-			free(deviceInfo->ledPositions->ledPosition);
-		}
-
-		free(deviceInfo->ledPositions);
-	}
-
-	if (deviceInfo->promoImage)
-	{
-		if (deviceInfo->promoImage->hash)
-		{
-			free(deviceInfo->promoImage->hash);
-		}
-		if (deviceInfo->promoImage->path)
-		{
-			free(deviceInfo->promoImage->path);
-		}
-
-		free(deviceInfo->promoImage);
-	}
-
-	if (deviceInfo->thumbnail)
-	{
-		if (deviceInfo->thumbnail->hash)
-		{
-			free(deviceInfo->thumbnail->hash);
-		}
-
-		if (deviceInfo->thumbnail->path)
-		{
-			free(deviceInfo->thumbnail->path);
-		}
-
-		free(deviceInfo->thumbnail);
-	}
-
-	if (deviceInfo->deviceId)
-	{
-		free(deviceInfo->deviceId);
-	}
-
-	if (deviceInfo->deviceName)
-	{
-		free(deviceInfo->deviceName);
-	}
-
-	free(deviceInfo);
+	CorsairPluginDevice::DestroyDeviceInfo(deviceInfo);
 }
 
 void CorsairPluginFreeDeviceView(cue::dev::plugin::DeviceView* deviceView)
 {
 	OutputDebugMessage("CorsairPluginFreeDeviceView: %08X", deviceView);
-
-	if (deviceView->ledView)
-	{
-		if (deviceView->ledView->view)
-		{
-			for (std::int32_t i = 0; i < deviceView->ledView->numberOfLed; ++i)
-			{
-				if (deviceView->ledView->view[i].path)
-				{
-					free(deviceView->ledView->view[i].path);
-				}
-				if (deviceView->ledView->view[i].text)
-				{
-					free(deviceView->ledView->view[i].text);
-				}
-			}
-
-			free(deviceView->ledView->view);
-		}
-
-		free(deviceView->ledView);
-	}
-
-	if (deviceView->mask)
-	{
-		if (deviceView->mask->hash)
-		{
-			free(deviceView->mask->hash);
-		}
-
-		if (deviceView->mask->path)
-		{
-			free(deviceView->mask->path);
-		}
-
-		free(deviceView->mask);
-	}
-
-	if (deviceView->view)
-	{
-		if (deviceView->view->hash)
-		{
-			free(deviceView->view->hash);
-		}
-
-		if (deviceView->view->path)
-		{
-			free(deviceView->view->path);
-		}
-		free(deviceView->view);
-	}
-
-
-	free(deviceView);
+	CorsairPluginDevice::DestroyDeviceView(deviceView);
 }
 
 void CorsairSubscribeForDeviceConnectionStatusChanges(void* context, _DeviceConnectionStatusChangeCallback deviceStatusCallback)
 {
 	OutputDebugMessage("CorsairSubscribeForDeviceConnectionStatusChanges: %08X - %08X", context, deviceStatusCallback);
-
 	g_deviceManager = std::make_unique<CorsairPluginDeviceManager>(context, deviceStatusCallback, GetImageHash, GetLocalFile);
 	g_deviceManager->Start();
 }
@@ -249,7 +137,6 @@ void CorsairSubscribeForDeviceConnectionStatusChanges(void* context, _DeviceConn
 void CorsairPluginUnsubscribeFromDeviceStatusChanges()
 {
 	OutputDebugMessage("CorsairPluginUnsubscribeFromDeviceStatusChanges");
-
 	g_deviceManager.reset();
 }
 
@@ -315,6 +202,25 @@ bool CorsairGetDevicePropertyInfo(const char* deviceId, cue::dev::plugin::Device
 		return true;
 	}
 	break;
+
+#ifdef CHANNELS
+	case cue::dev::plugin::DevicePropertyId::ChannelsCount:
+	{
+		dataType = cue::dev::plugin::PropertyDataType::Integer;
+		flags = cue::dev::plugin::PropertyFlags::CanRead;
+		return true;
+	}
+	break;
+	case cue::dev::plugin::DevicePropertyId::ChannelName:
+	{
+		dataType = cue::dev::plugin::PropertyDataType::String;
+		flags = cue::dev::plugin::PropertyFlags::CanRead | cue::dev::plugin::PropertyFlags::Indexed;
+		return true;
+	}
+	break;
+
+#endif
+
 	default:
 		break;
 	}
@@ -328,26 +234,61 @@ cue::dev::plugin::PropertyData* CorsairReadDevicePropertyData(const char* device
 		::Sleep(100);
 #endif
 	OutputDebugMessage("CorsairReadDevicePropertyData: Device: %s, Index: %d, PropertyId: %d", deviceId, index, propertyId);
-
 	switch (propertyId)
 	{
 	case cue::dev::plugin::DevicePropertyId::PropertiesList:
 	{
+#ifdef CHANNELS
+		static int PROPERTIES = 6;
+#else
+		static int PROPERTIES = 4;
+#endif
 		auto propertyData = new cue::dev::plugin::PropertyData;
-		propertyData->data = new cue::dev::plugin::DevicePropertyId[4] {
+		propertyData->data.devicePropertyArray = new cue::dev::plugin::DevicePropertyId[PROPERTIES] {
 			cue::dev::plugin::DevicePropertyId::SensorsCount,
 			cue::dev::plugin::DevicePropertyId::SensorType,
 			cue::dev::plugin::DevicePropertyId::SensorValue,
-			cue::dev::plugin::DevicePropertyId::SensorName
+			cue::dev::plugin::DevicePropertyId::SensorName,
+#ifdef CHANNELS
+			cue::dev::plugin::DevicePropertyId::ChannelsCount,
+			cue::dev::plugin::DevicePropertyId::ChannelName
+#endif
 		};
-		propertyData->count = 4;
+		propertyData->count = PROPERTIES;
 		return propertyData;
 	}
 	break;
+
+#ifdef CHANNELS
+	case cue::dev::plugin::DevicePropertyId::ChannelsCount:
+	{
+		auto propertyData = new cue::dev::plugin::PropertyData;
+		propertyData->data.s64 = 2;
+		propertyData->count = 0;
+		return propertyData;
+	}
+	break;
+	case cue::dev::plugin::DevicePropertyId::ChannelName:
+	{
+		auto propertyData = new cue::dev::plugin::PropertyData;
+		if (index == 0)
+		{
+			propertyData->data.str = _strdup("Cool Channel 1");
+		}
+		else if (index == 1)
+		{
+			propertyData->data.str = _strdup("Cool Channel 2");
+		}
+		propertyData->count = 0;
+		return propertyData;
+	}
+	break;
+#endif
+
 	case cue::dev::plugin::DevicePropertyId::SensorsCount:
 	{
 		auto propertyData = new cue::dev::plugin::PropertyData;
-		propertyData->data = (void*)1;
+		propertyData->data.s64 = 2;
 		propertyData->count = 0;
 		return propertyData;
 	}
@@ -355,7 +296,15 @@ cue::dev::plugin::PropertyData* CorsairReadDevicePropertyData(const char* device
 	case cue::dev::plugin::DevicePropertyId::SensorType:
 	{
 		auto propertyData = new cue::dev::plugin::PropertyData;
-		propertyData->data = (void*)cue::dev::plugin::SensorType::Temperature;
+		if (index == 0)
+		{
+			propertyData->data.s64 = cue::dev::plugin::SensorType::Temperature;
+		}
+		else
+		{
+			propertyData->data.s64 = cue::dev::plugin::SensorType::Power;
+		}
+		
 		propertyData->count = 0;
 		return propertyData;
 	}
@@ -363,7 +312,14 @@ cue::dev::plugin::PropertyData* CorsairReadDevicePropertyData(const char* device
 	case cue::dev::plugin::DevicePropertyId::SensorValue:
 	{
 		auto propertyData = new cue::dev::plugin::PropertyData;
-		propertyData->data = (void*)6000;
+		if (index == 0)
+		{
+			propertyData->data.s64 = 6000;
+		}
+		else
+		{
+			propertyData->data.s64 = 50;
+		}
 		propertyData->count = 0;
 		return propertyData;
 	}
@@ -371,7 +327,14 @@ cue::dev::plugin::PropertyData* CorsairReadDevicePropertyData(const char* device
 	case cue::dev::plugin::DevicePropertyId::SensorName:
 	{
 		auto propertyData = new cue::dev::plugin::PropertyData;
-		propertyData->data = _strdup("TEST");
+		if (index == 0)
+		{
+			propertyData->data.str = _strdup("Temperature");
+		}
+		else
+		{
+			propertyData->data.str = _strdup("Power");
+		}
 		propertyData->count = 0;
 		return propertyData;
 	}
@@ -390,25 +353,6 @@ cue::dev::plugin::PropertyData* CorsairReadPluginPropertyData(cue::dev::plugin::
 		::Sleep(100);
 #endif
 	OutputDebugMessage("CorsairReadPluginPropertyData: Index: %d, PropertyId: %d", index, propertyId);
-	switch (propertyId)
-	{
-	case cue::dev::plugin::PluginPropertyId::PropertiesList:
-	{
-		auto propertyData = new cue::dev::plugin::PropertyData;
-		propertyData->data = new cue::dev::plugin::DevicePropertyId[4]{
-			cue::dev::plugin::DevicePropertyId::SensorsCount,
-			cue::dev::plugin::DevicePropertyId::SensorType,
-			cue::dev::plugin::DevicePropertyId::SensorValue,
-			cue::dev::plugin::DevicePropertyId::SensorName
-		};
-		propertyData->count = 4;
-		return propertyData;
-	}
-	break;
-	default:
-		break;
-	}
-
 	return nullptr;
 }
 
@@ -438,34 +382,43 @@ void CorsairFreePropertyData(cue::dev::plugin::PropertyDataType propertyId, cue:
 	while (!::IsDebuggerPresent())
 		::Sleep(100);
 #endif
+	OutputDebugMessage("CorsairFreePropertyData: PropertyId: %d", propertyId);
 	switch (propertyId)
 	{
 	case cue::dev::plugin::PropertyDataType::BoolArray:
-		delete[] static_cast<bool*>(data->data);
+		delete[] data->data.boolArray;
 		break;
 	case cue::dev::plugin::PropertyDataType::IntegerArray:
-		delete[] static_cast<uint32_t*>(data->data);
+		delete[] data->data.intArray;
 		break;
 	case cue::dev::plugin::PropertyDataType::DoubleArray:
-		delete[] static_cast<double*>(data->data);
+		delete[] data->data.doubleArray;
 		break;
 	case cue::dev::plugin::PropertyDataType::StringArray:
 		for (int32_t i = 0; i < data->count; ++i)
 		{
-			free(reinterpret_cast<char**>(data->data)[i]);
+			free(data->data.strArray[i]);
 		}
-		delete[] static_cast<char**>(data->data);
+		delete[] data->data.strArray;
 		break;
 	case cue::dev::plugin::PropertyDataType::String:
-		free(data->data);
+		free(data->data.str);
 		break;
 	default:
 		break;
 	}
 
 	delete data;
+}
 
-	OutputDebugMessage("CorsairFreePropertyData: PropertyId: %d", propertyId);
+void CorsairSetLedColorAtChannel(const char* deviceId, std::int32_t unk1, std::int32_t size, LedColorChannel& channel)
+{
+#if 0
+	while (!::IsDebuggerPresent())
+		::Sleep(100);
+#endif
+
+	OutputDebugMessage("CorsairSetLedColorAtChannel: deviceId: %s", deviceId);
 }
 
 extern "C"
@@ -473,7 +426,7 @@ extern "C"
 	void CorsairPluginFreeInstance(CorsairGetInstance* instance)
 	{
 		OutputDebugMessage("CorsairPluginFreeInstance: %08X", instance);
-		free(instance);
+		delete instance;
 	}
 
 	std::int32_t CorsairPluginGetAPIVersion()
@@ -492,6 +445,9 @@ extern "C"
 		cue::dev::plugin::SupportedFeatures features = cue::dev::plugin::SupportedFeatures::DetachedMode;
 #ifdef _DEBUG
 		features |= cue::dev::plugin::SupportedFeatures::DeviceProperties;
+#ifdef CHANNELS
+		features |= cue::dev::plugin::SupportedFeatures::DeviceChannels;
+#endif
 #endif
 		return features;
 	}
@@ -593,7 +549,7 @@ extern "C"
 		}
 #endif
 
-		CorsairGetInstance* instance = static_cast<CorsairGetInstance*>(malloc(sizeof(CorsairGetInstance)));
+		CorsairGetInstance* instance = new CorsairGetInstance;
 		memset(instance, 0, sizeof(CorsairGetInstance));
 		instance->getDeviceInfo = CorsairPluginGetDeviceInfo;
 		instance->setLedsColors = CorsairSetLedsColors;
@@ -614,6 +570,9 @@ extern "C"
 		instance->getDevicePropertyInfo = CorsairGetDevicePropertyInfo;
 		instance->readDevicePropertyData = CorsairReadDevicePropertyData;
 		instance->writeDevicePropertyData = CorsairWriteDevicePropertyData;
+#ifdef CHANNELS
+		instance->setLedsColorsAtChannel = CorsairSetLedColorAtChannel;
+#endif
 #endif
 		return instance;
 	}

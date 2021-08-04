@@ -3,36 +3,14 @@
 #include "CorsairLedIdEnum.h"
 #include <cstdint>
 
-template<typename Enum>
-struct EnableBitMaskOperators
-{
-	static const bool enable = false;
-};
-
-template<typename Enum>
-typename std::enable_if<EnableBitMaskOperators<Enum>::enable, Enum>::type
-operator |(Enum lhs, Enum rhs)
-{
-	using underlying = typename std::underlying_type<Enum>::type;
-	return static_cast<Enum>(
-		static_cast<underlying>(lhs) |
-		static_cast<underlying>(rhs)
-		);
-}
-template<typename Enum>
-typename std::enable_if<EnableBitMaskOperators<Enum>::enable, Enum>::type
-operator |=(Enum lhs, Enum rhs)
-{
-	lhs = lhs | rhs;
-	return lhs;
-}
-
-#define ENABLE_BITMASK_OPERATORS(x)  \
-template<>                           \
-struct EnableBitMaskOperators<x>     \
-{                                    \
-	static const bool enable = true; \
-};
+#define ENABLE_BITMASK_OPERATORS(ENUMTYPE) \
+constexpr ENUMTYPE operator |(ENUMTYPE lhs, ENUMTYPE rhs) {return static_cast<ENUMTYPE> (static_cast<std::underlying_type<ENUMTYPE>::type>(lhs) | static_cast<std::underlying_type<ENUMTYPE>::type>(rhs));} \
+constexpr ENUMTYPE operator &(ENUMTYPE lhs, ENUMTYPE rhs) {return static_cast<ENUMTYPE>(static_cast<std::underlying_type<ENUMTYPE>::type>(lhs) & static_cast<std::underlying_type<ENUMTYPE>::type>(rhs));} \
+constexpr ENUMTYPE operator ^(ENUMTYPE lhs, ENUMTYPE rhs) {return static_cast<ENUMTYPE> (static_cast<std::underlying_type<ENUMTYPE>::type>(lhs) ^ static_cast<std::underlying_type<ENUMTYPE>::type>(rhs));} \
+constexpr ENUMTYPE operator ~(ENUMTYPE rhs) {return static_cast<ENUMTYPE> (~static_cast<std::underlying_type<ENUMTYPE>::type>(rhs));} \
+constexpr ENUMTYPE& operator |=(ENUMTYPE& lhs, ENUMTYPE rhs) {lhs = static_cast<ENUMTYPE>(static_cast<std::underlying_type<ENUMTYPE>::type>(lhs) | static_cast<std::underlying_type<ENUMTYPE>::type>(rhs));return lhs;} \
+constexpr ENUMTYPE& operator &=(ENUMTYPE& lhs, ENUMTYPE rhs) {lhs = static_cast<ENUMTYPE>(static_cast<std::underlying_type<ENUMTYPE>::type>(lhs) & static_cast<std::underlying_type<ENUMTYPE>::type>(rhs));return lhs;} \
+constexpr ENUMTYPE& operator ^=(ENUMTYPE& lhs, ENUMTYPE rhs) {lhs = static_cast<ENUMTYPE>(static_cast<std::underlying_type<ENUMTYPE>::type>(lhs) ^ static_cast<std::underlying_type<ENUMTYPE>::type>(rhs));return lhs;}
 
 namespace cue
 {
@@ -86,11 +64,11 @@ enum class PluginPropertyId : std::uint32_t
 	Locale
 };
 
-enum class DevicePropertyId : std::uint32_t
+enum class DevicePropertyId : std::int32_t
 {
 	Invalid,
 	PropertiesList,
-	ChannelsCount,
+	ChannelsCount, // Max 2 channels
 	ChannelName,
 	SensorsCount,
 	SensorType,
@@ -106,7 +84,19 @@ enum class DevicePropertyId : std::uint32_t
 
 struct PropertyData
 {
-	void* data;				// 00 Data
+	union
+	{
+		bool* boolArray;
+		std::int32_t* intArray;
+		double* doubleArray;
+		char** strArray;
+		std::int32_t i32;
+		std::int64_t s64;
+		double f64;
+		char* str;
+		DevicePropertyId* devicePropertyArray;
+		PluginPropertyId* pluginPropertyArray;
+	} data;
 	std::int32_t count;		// 04
 };
 
@@ -146,8 +136,8 @@ enum class Mode : std::uint32_t
 // 08
 struct Image
 {
-	char* path;		// 00
-	char* hash;		// 04 - This is a SHA256 of the image data at the provided path
+	char* path;		// 00 00
+	char* hash;		// 04 08 - This is a SHA256 of the image data at the provided path
 };
 
 struct LedColor		// contains information about led and its color.
@@ -172,24 +162,24 @@ struct LedPosition
 // 08
 struct LedPositions
 {
-	std::int32_t		numberOfLed;	// 00
-	LedPosition* ledPosition;	// 04
+	std::int32_t		numberOfLed;	// 00 00
+	LedPosition* ledPosition;			// 04 08
 };
 
 // 10
 struct LedView
 {
-	CorsairLedId ledId;					// 00
-	char* path;							// 04
-	ZoneAppearance appearance;	// 08
-	char* text;							// 0C
+	CorsairLedId ledId;					// 00 00
+	char* path;							// 04 08
+	ZoneAppearance appearance;			// 08 10
+	char* text;							// 0C 18
 };
 
 // 08
 struct LedViews
 {
-	std::int32_t numberOfLed;	// 00
-	LedView* view;		// 04
+	std::int32_t numberOfLed;	// 00 00
+	LedView* view;				// 04 08
 };
 
 enum class DeviceType : std::uint32_t
@@ -202,22 +192,22 @@ enum class DeviceType : std::uint32_t
 // 1C
 struct DeviceInfo
 {
-	char* deviceName;					// 00 - UI name of the device
-	DeviceType deviceType;		// 04
-	LedPositions* ledPositions;	// 08
-	Image* thumbnail;		// 0C - Thumbnail shown when editing a device
-	char* deviceId;						// 10 - Unique name of the device, passed to other calls to determine what device it is
-	std::int32_t numberOfDeviceView;	// 14 - Number of device views to display in the UI, this will result in multiple calls to CorsairPluginGetDeviceView with a different View index
-	Image* promoImage;		// 18 - Image shown in the Devices summary
+	char* deviceName;					// 00 00 - UI name of the device
+	DeviceType deviceType;				// 04 04
+	LedPositions* ledPositions;			// 08 08
+	Image* thumbnail;					// 0C 10 - Thumbnail shown when editing a device
+	char* deviceId;						// 10 18 - Unique name of the device, passed to other calls to determine what device it is
+	std::int32_t numberOfDeviceView;	// 14 20 - Number of device views to display in the UI, this will result in multiple calls to CorsairPluginGetDeviceView with a different View index
+	Image* promoImage;					// 18 28 - Image shown in the Devices summary
 };
 
 // 10
 struct DeviceView
 {
-	Image* view;			// 00 - Image shown in the editing view of the device
-	Image* mask;			// 04 - Masks the view image, white is opaque, black is transparent
-	LedViews* ledView;		// 08
-	LedViews* actionZones;	// 0C - I don't know what this is yet
+	Image* view;			// 00 00 - Image shown in the editing view of the device
+	Image* mask;			// 04 08 - Masks the view image, white is opaque, black is transparent
+	LedViews* ledView;		// 08 10
+	LedViews* actionZones;	// 0C 18 - I don't know what this is yet
 };
 }
 }
@@ -240,17 +230,17 @@ typedef void (*_CorsairSetMode)(std::int32_t mode);
 // 2C
 struct CorsairGetInstance_v66
 {
-	_CorsairPluginGetDeviceInfo getDeviceInfo;														// 00
-	_CorsairSetLedsColors setLedsColors;															// 04
-	_CorsairSubscribeForDeviceConnectionStatusChanges subscribeForDeviceConnectionStatusChanges;	// 08
-	_CorsairPluginUnsubscribeFromDeviceStatusChanges unsubscribeFromDeviceConnectionStatusChanges;	// 0C
-	_CorsairPluginGetDeviceView getDeviceView;														// 10
-	_CorsairPluginFreeDeviceInfo freeDeviceInfo;													// 14
-	_CorsairPluginFreeDeviceView freeDeviceView;													// 18
-	_CorsairConfigureKeyEvent configureKeyEvent;													// 1C
-	_CorsairSubscribeForEvents subscribeForEvents;													// 20
-	_CorsairUnsubscribeFromEvents unsubscribeFromEvents;											// 24
-	_CorsairSetMode setMode;																		// 28
+	_CorsairPluginGetDeviceInfo getDeviceInfo;														// 00 00
+	_CorsairSetLedsColors setLedsColors;															// 04 08
+	_CorsairSubscribeForDeviceConnectionStatusChanges subscribeForDeviceConnectionStatusChanges;	// 08 10
+	_CorsairPluginUnsubscribeFromDeviceStatusChanges unsubscribeFromDeviceConnectionStatusChanges;	// 0C 18
+	_CorsairPluginGetDeviceView getDeviceView;														// 10 20
+	_CorsairPluginFreeDeviceInfo freeDeviceInfo;													// 14 28
+	_CorsairPluginFreeDeviceView freeDeviceView;													// 18 30
+	_CorsairConfigureKeyEvent configureKeyEvent;													// 1C 38
+	_CorsairSubscribeForEvents subscribeForEvents;													// 20 40
+	_CorsairUnsubscribeFromEvents unsubscribeFromEvents;											// 24 48
+	_CorsairSetMode setMode;																		// 28 50
 };
 
 typedef bool (*_CorsairGetPluginPropertyInfo)(cue::dev::plugin::PluginPropertyId propertyId, std::int32_t index, cue::dev::plugin::PropertyDataType& dataType, cue::dev::plugin::PropertyFlags& flags);
@@ -263,26 +253,33 @@ typedef bool (*_CorsairWriteDevicePropertyData)(const char* deviceId, cue::dev::
 
 typedef void (*_CorsairFreePropertyData)(cue::dev::plugin::PropertyDataType dataType, cue::dev::plugin::PropertyData* data);
 
+struct LedColorChannel
+{
+	void* unk00;
+	cue::dev::plugin::LedColor* ledColors;
+};
+typedef void (*_CorsairSetLedColorAtChannel)(const char* deviceId, std::int32_t unk1, std::int32_t size, LedColorChannel& channel);
+
 // 4C
 struct CorsairGetInstance_v67
 {
-	_CorsairPluginGetDeviceInfo getDeviceInfo;														// 00
-	_CorsairSetLedsColors setLedsColors;															// 04
-	_CorsairSubscribeForDeviceConnectionStatusChanges subscribeForDeviceConnectionStatusChanges;	// 08
-	_CorsairPluginUnsubscribeFromDeviceStatusChanges unsubscribeFromDeviceConnectionStatusChanges;	// 0C
-	_CorsairPluginGetDeviceView getDeviceView;														// 10
-	_CorsairPluginFreeDeviceInfo freeDeviceInfo;													// 14
-	_CorsairPluginFreeDeviceView freeDeviceView;													// 18
-	_CorsairConfigureKeyEvent configureKeyEvent;													// 1C
-	_CorsairSubscribeForEvents subscribeForEvents;													// 20
-	_CorsairUnsubscribeFromEvents unsubscribeFromEvents;											// 24
-	_CorsairSetMode setMode;																		// 28
-	_CorsairGetPluginPropertyInfo getPropertyInfo;													// 2C
-	_CorsairReadPluginPropertyData readPropertyData;												// 30
-	_CorsairWritePluginPropertyData writePropertyData;												// 34
-	_CorsairGetDevicePropertyInfo getDevicePropertyInfo;											// 38
-	_CorsairReadDevicePropertyData readDevicePropertyData;											// 3C
-	_CorsairWriteDevicePropertyData writeDevicePropertyData;										// 40
-	_CorsairFreePropertyData freePropertyData;														// 44
-	void* setLedsColorsAtChannel;																	// 48
+	_CorsairPluginGetDeviceInfo getDeviceInfo;														// 00 00
+	_CorsairSetLedsColors setLedsColors;															// 04 08
+	_CorsairSubscribeForDeviceConnectionStatusChanges subscribeForDeviceConnectionStatusChanges;	// 08 10
+	_CorsairPluginUnsubscribeFromDeviceStatusChanges unsubscribeFromDeviceConnectionStatusChanges;	// 0C 18
+	_CorsairPluginGetDeviceView getDeviceView;														// 10 20
+	_CorsairPluginFreeDeviceInfo freeDeviceInfo;													// 14 28
+	_CorsairPluginFreeDeviceView freeDeviceView;													// 18 30
+	_CorsairConfigureKeyEvent configureKeyEvent;													// 1C 38
+	_CorsairSubscribeForEvents subscribeForEvents;													// 20 40
+	_CorsairUnsubscribeFromEvents unsubscribeFromEvents;											// 24 48
+	_CorsairSetMode setMode;																		// 28 50
+	_CorsairGetPluginPropertyInfo getPropertyInfo;													// 2C 58
+	_CorsairReadPluginPropertyData readPropertyData;												// 30 60
+	_CorsairWritePluginPropertyData writePropertyData;												// 34 68
+	_CorsairGetDevicePropertyInfo getDevicePropertyInfo;											// 38 70
+	_CorsairReadDevicePropertyData readDevicePropertyData;											// 3C 78
+	_CorsairWriteDevicePropertyData writeDevicePropertyData;										// 40 80
+	_CorsairFreePropertyData freePropertyData;														// 44 88
+	_CorsairSetLedColorAtChannel setLedsColorsAtChannel;											// 48 90
 };

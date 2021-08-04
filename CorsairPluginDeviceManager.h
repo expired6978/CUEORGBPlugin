@@ -47,7 +47,7 @@ private:
 	std::mutex mDeviceLock;
 	std::unordered_map<std::string, std::unique_ptr<CorsairPluginDevice>> mDeviceMap;
 	std::future<void> mDeviceUpdateRequest;
-	NetworkClient* mNetworkClient;
+	std::unique_ptr<NetworkClient> mNetworkClient;
 	std::vector<RGBController*> mControllerList;
 
 	std::function<std::string(const std::string&)> mImageHasher;
