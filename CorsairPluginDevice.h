@@ -4,8 +4,9 @@
 #include <map>
 #include <string>
 #include <tchar.h>
-
-#include "json/json.hpp"
+#include <unordered_map>
+#include <functional>
+#include <json/json.hpp>
 
 class RGBController;
 

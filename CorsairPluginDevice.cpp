@@ -2,6 +2,7 @@
 #include "RGBController.h"
 #include "CUESDKDevice.h"
 
+#include <json/json.hpp>
 #include <sstream>
 #include <algorithm>
 

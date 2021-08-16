@@ -1,0 +1,84 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Source Files\OpenRGB">
+      <UniqueIdentifier>{2c80681e-030a-454e-9459-aee40740ba14}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\OpenRGB\net_port">
+      <UniqueIdentifier>{68467804-d7b1-461b-9e00-d4e6c92bcc7f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\OpenRGB\RGBController">
+      <UniqueIdentifier>{011134a8-4bb2-498a-8400-db42def62e4e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\OpenRGB">
+      <UniqueIdentifier>{117cc2e5-2f3e-49dc-ad0d-5a4383e477c6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\OpenRGB\net_port">
+      <UniqueIdentifier>{2971b9be-cfc5-404d-8f6e-38990ccea51b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\OpenRGB\RGBController">
+      <UniqueIdentifier>{08e5d5ab-277a-457d-9e9f-94201de86648}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="OpenRGBClient.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CorsairPluginDeviceManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CorsairPluginDevice.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\thirdparty\OpenRGB\NetworkProtocol.cpp">
+      <Filter>Source Files\OpenRGB</Filter>
+    </ClCompile>
+    <ClCompile Include="..\thirdparty\OpenRGB\NetworkClient.cpp">
+      <Filter>Source Files\OpenRGB</Filter>
+    </ClCompile>
+    <ClCompile Include="..\thirdparty\OpenRGB\net_port\net_port.cpp">
+      <Filter>Source Files\OpenRGB\net_port</Filter>
+    </ClCompile>
+    <ClCompile Include="..\thirdparty\OpenRGB\RGBController\RGBController.cpp">
+      <Filter>Source Files\OpenRGB\RGBController</Filter>
+    </ClCompile>
+    <ClCompile Include="..\thirdparty\OpenRGB\RGBController\RGBController_Network.cpp">
+      <Filter>Source Files\OpenRGB\RGBController</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\CorsairPluginDeviceManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\CorsairPluginDevice.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\thirdparty\OpenRGB\RGBController\RGBController_Network.h">
+      <Filter>Header Files\OpenRGB\RGBController</Filter>
+    </ClInclude>
+    <ClInclude Include="..\thirdparty\OpenRGB\RGBController\RGBController.h">
+      <Filter>Header Files\OpenRGB\RGBController</Filter>
+    </ClInclude>
+    <ClInclude Include="..\thirdparty\OpenRGB\NetworkProtocol.h">
+      <Filter>Header Files\OpenRGB</Filter>
+    </ClInclude>
+    <ClInclude Include="..\thirdparty\OpenRGB\NetworkClient.h">
+      <Filter>Header Files\OpenRGB</Filter>
+    </ClInclude>
+    <ClInclude Include="..\thirdparty\OpenRGB\net_port\net_port.h">
+      <Filter>Header Files\OpenRGB\net_port</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
