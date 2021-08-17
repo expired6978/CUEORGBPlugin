@@ -19,6 +19,11 @@ EXTERN_C IMAGE_DOS_HEADER __ImageBase;
 #include "CorsairPluginDeviceManager.h"
 
 #ifdef _DEBUG
+
+//#define SUSPEND_API
+//#define C_PROPERTIES
+//#define C_CHANNELS
+
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdarg.h>
@@ -41,14 +46,11 @@ void OutputDebugMessage(const char* lpszFormat, ...)
 
 std::unique_ptr<CorsairPluginDeviceManager> g_deviceManager;
 
-#ifdef _DEBUG
+#ifdef C_PROPERTIES
 using CorsairGetInstance = CorsairGetInstance_v67;
 #else
 using CorsairGetInstance = CorsairGetInstance_v66;
 #endif
-
-//#define SUSPEND_API
-#define CHANNELS
 
 std::wstring GetLocalFile(const std::wstring& relativePath)
 {
@@ -203,7 +205,7 @@ bool CorsairGetDevicePropertyInfo(const char* deviceId, cue::dev::plugin::Device
 	}
 	break;
 
-#ifdef CHANNELS
+#ifdef C_CHANNELS
 	case cue::dev::plugin::DevicePropertyId::ChannelsCount:
 	{
 		dataType = cue::dev::plugin::PropertyDataType::Integer;
@@ -238,7 +240,7 @@ cue::dev::plugin::PropertyData* CorsairReadDevicePropertyData(const char* device
 	{
 	case cue::dev::plugin::DevicePropertyId::PropertiesList:
 	{
-#ifdef CHANNELS
+#ifdef C_CHANNELS
 		static int PROPERTIES = 6;
 #else
 		static int PROPERTIES = 4;
@@ -249,7 +251,7 @@ cue::dev::plugin::PropertyData* CorsairReadDevicePropertyData(const char* device
 			cue::dev::plugin::DevicePropertyId::SensorType,
 			cue::dev::plugin::DevicePropertyId::SensorValue,
 			cue::dev::plugin::DevicePropertyId::SensorName,
-#ifdef CHANNELS
+#ifdef C_CHANNELS
 			cue::dev::plugin::DevicePropertyId::ChannelsCount,
 			cue::dev::plugin::DevicePropertyId::ChannelName
 #endif
@@ -259,7 +261,7 @@ cue::dev::plugin::PropertyData* CorsairReadDevicePropertyData(const char* device
 	}
 	break;
 
-#ifdef CHANNELS
+#ifdef C_CHANNELS
 	case cue::dev::plugin::DevicePropertyId::ChannelsCount:
 	{
 		auto propertyData = new cue::dev::plugin::PropertyData;
@@ -432,7 +434,7 @@ extern "C"
 	std::int32_t CorsairPluginGetAPIVersion()
 	{
 		OutputDebugMessage("CorsairPluginGetAPIVersion");
-#ifdef _DEBUG
+#ifdef C_PROPERTIES
 		return 0x67;
 #else
 		return 0x66;
@@ -443,11 +445,11 @@ extern "C"
 	{
 		OutputDebugMessage("CorsairPluginGetFeatures");
 		cue::dev::plugin::SupportedFeatures features = cue::dev::plugin::SupportedFeatures::DetachedMode;
-#ifdef _DEBUG
+#ifdef C_PROPERTIES
 		features |= cue::dev::plugin::SupportedFeatures::DeviceProperties;
-#ifdef CHANNELS
-		features |= cue::dev::plugin::SupportedFeatures::DeviceChannels;
 #endif
+#ifdef C_CHANNELS
+		features |= cue::dev::plugin::SupportedFeatures::DeviceChannels;
 #endif
 		return features;
 	}
@@ -562,7 +564,7 @@ extern "C"
 		instance->unsubscribeFromEvents = CorsairUnsubscribeFromEvents;
 		instance->configureKeyEvent = CorsairConfigureKeyEvent;
 		instance->setMode = CorsairSetMode;
-#ifdef _DEBUG
+#ifdef C_PROPERTIES
 		instance->getPropertyInfo = CorsairGetPluginPropertyInfo;
 		instance->readPropertyData = CorsairReadPluginPropertyData;
 		instance->writePropertyData = CorsairWritePluginPropertyData;
@@ -570,9 +572,9 @@ extern "C"
 		instance->getDevicePropertyInfo = CorsairGetDevicePropertyInfo;
 		instance->readDevicePropertyData = CorsairReadDevicePropertyData;
 		instance->writeDevicePropertyData = CorsairWriteDevicePropertyData;
-#ifdef CHANNELS
-		instance->setLedsColorsAtChannel = CorsairSetLedColorAtChannel;
 #endif
+#ifdef C_CHANNELS
+		instance->setLedsColorsAtChannel = CorsairSetLedColorAtChannel;
 #endif
 		return instance;
 	}
