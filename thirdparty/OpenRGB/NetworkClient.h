@@ -100,7 +100,6 @@ private:
     unsigned int    server_protocol_version;
     bool            server_protocol_version_received;
     bool            change_in_progress;
-    std::mutex      SendLock;
 
     std::thread *   ConnectionThread;
     std::thread *   ListenThread;

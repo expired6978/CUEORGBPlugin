@@ -68,12 +68,12 @@ void CorsairPluginDeviceManager::Stop()
 
 bool CorsairPluginDeviceManager::SetColor(const char* deviceId, std::int32_t size, cue::dev::plugin::LedColor* ledsColors)
 {
-	std::lock_guard<std::mutex> networkLock(mNetworkClient->ControllerListMutex);
 	std::lock_guard<std::mutex> deviceLock(mDeviceLock);
 
 	auto it = mDeviceMap.find(deviceId);
 	if (it != mDeviceMap.end())
 	{
+		mNetworkClient->ControllerListMutex.lock();
 		auto controller = it->second->GetController();
 		for (std::int32_t i = 0; i < size; ++i)
 		{
@@ -86,6 +86,7 @@ bool CorsairPluginDeviceManager::SetColor(const char* deviceId, std::int32_t siz
 				controller->SetLED(controller->zones.at(zoneId).start_idx + zoneIndex, ToRGBColor(ledColor.r, ledColor.g, ledColor.b));
 			}
 		}
+		mNetworkClient->ControllerListMutex.unlock();
 
 		controller->UpdateLEDs();
 		return true;
