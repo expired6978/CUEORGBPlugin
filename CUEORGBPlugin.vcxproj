@@ -144,7 +144,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;CUEORGBPLUGIN_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions);_WINSOCK_DEPRECATED_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;CUEORGBPLUGIN_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions);_WINSOCK_DEPRECATED_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(ProjectDir)thirdparty;$(ProjectDir)thirdparty\OpenRGB;$(ProjectDir)thirdparty\OpenRGB\RGBController;$(ProjectDir)thirdparty\OpenRGB\net_port;$(ProjectDir)thirdparty\CUESDK;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -162,7 +162,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;CUEORGBPLUGIN_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions);_WINSOCK_DEPRECATED_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;CUEORGBPLUGIN_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions);_WINSOCK_DEPRECATED_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(ProjectDir)thirdparty;$(ProjectDir)thirdparty\OpenRGB;$(ProjectDir)thirdparty\OpenRGB\RGBController;$(ProjectDir)thirdparty\OpenRGB\net_port;$(ProjectDir)thirdparty\CUESDK;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>

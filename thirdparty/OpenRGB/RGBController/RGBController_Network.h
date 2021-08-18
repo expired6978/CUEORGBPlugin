@@ -26,6 +26,7 @@ public:
 
     void        SetCustomMode();
     void        DeviceUpdateMode();
+    void        DeviceSaveMode();
 
 private:
     NetworkClient *     client;

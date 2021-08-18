@@ -3,6 +3,28 @@
 
 using namespace std::chrono_literals;
 
+mode::mode()
+{
+    name           = "";
+    value          = 0;
+    flags          = 0;
+    speed_min      = 0;
+    speed_max      = 0;
+    brightness_min = 0;
+    brightness_max = 0;
+    colors_min     = 0;
+    colors_max     = 0;
+    speed          = 0;
+    brightness     = 0;
+    direction      = 0;
+    color_mode     = 0;
+}
+
+mode::~mode()
+{
+    colors.clear();
+}
+
 RGBController::RGBController()
 {
     DeviceThreadRunning = true;
@@ -14,9 +36,14 @@ RGBController::~RGBController()
     DeviceThreadRunning = false;
     DeviceCallThread->join();
     delete DeviceCallThread;
+
+    leds.clear();
+    colors.clear();
+    zones.clear();
+    modes.clear();
 }
 
-unsigned char * RGBController::GetDeviceDescription()
+unsigned char * RGBController::GetDeviceDescription(unsigned int protocol_version)
 {
     unsigned int data_ptr = 0;
     unsigned int data_size = 0;
@@ -25,6 +52,7 @@ unsigned char * RGBController::GetDeviceDescription()
     | Calculate data size                                       |
     \*---------------------------------------------------------*/
     unsigned short name_len         = strlen(name.c_str())          + 1;
+    unsigned short vendor_len       = strlen(vendor.c_str())        + 1;
     unsigned short description_len  = strlen(description.c_str())   + 1;
     unsigned short version_len      = strlen(version.c_str())       + 1;
     unsigned short serial_len       = strlen(serial.c_str())        + 1;
@@ -44,6 +72,12 @@ unsigned char * RGBController::GetDeviceDescription()
     data_size += sizeof(data_size);
     data_size += sizeof(device_type);
     data_size += name_len           + sizeof(name_len);
+
+    if(protocol_version >= 1)
+    {
+        data_size += vendor_len     + sizeof(vendor_len);
+    }
+
     data_size += description_len    + sizeof(description_len);
     data_size += version_len        + sizeof(version_len);
     data_size += serial_len         + sizeof(serial_len);
@@ -62,9 +96,18 @@ unsigned char * RGBController::GetDeviceDescription()
         data_size += sizeof(modes[mode_index].flags);
         data_size += sizeof(modes[mode_index].speed_min);
         data_size += sizeof(modes[mode_index].speed_max);
+        if(protocol_version >= 3)
+        {
+            data_size += sizeof(modes[mode_index].brightness_min);
+            data_size += sizeof(modes[mode_index].brightness_max);
+        }
         data_size += sizeof(modes[mode_index].colors_min);
         data_size += sizeof(modes[mode_index].colors_max);
         data_size += sizeof(modes[mode_index].speed);
+        if(protocol_version >= 3)
+        {
+            data_size += sizeof(modes[mode_index].brightness);
+        }
         data_size += sizeof(modes[mode_index].direction);
         data_size += sizeof(modes[mode_index].color_mode);
         data_size += sizeof(mode_num_colors[mode_index]);
@@ -135,6 +178,18 @@ unsigned char * RGBController::GetDeviceDescription()
 
     strcpy((char *)&data_buf[data_ptr], name.c_str());
     data_ptr += name_len;
+
+    /*---------------------------------------------------------*\
+    | Copy in vendor (size+data) if protocol 1 or higher        |
+    \*---------------------------------------------------------*/
+    if(protocol_version >= 1)
+    {
+        memcpy(&data_buf[data_ptr], &vendor_len, sizeof(unsigned short));
+        data_ptr += sizeof(unsigned short);
+
+        strcpy((char *)&data_buf[data_ptr], vendor.c_str());
+        data_ptr += vendor_len;
+    }
 
     /*---------------------------------------------------------*\
     | Copy in description (size+data)                           |
@@ -223,6 +278,19 @@ unsigned char * RGBController::GetDeviceDescription()
         data_ptr += sizeof(modes[mode_index].speed_max);
 
         /*---------------------------------------------------------*\
+        | Copy in mode brightness_min and brightness_max (data) if  |
+        | protocol 3 or higher                                      |
+        \*---------------------------------------------------------*/
+        if(protocol_version >= 3)
+        {
+            memcpy(&data_buf[data_ptr], &modes[mode_index].brightness_min, sizeof(modes[mode_index].brightness_min));
+            data_ptr += sizeof(modes[mode_index].brightness_min);
+
+            memcpy(&data_buf[data_ptr], &modes[mode_index].brightness_max, sizeof(modes[mode_index].brightness_max));
+            data_ptr += sizeof(modes[mode_index].brightness_max);
+        }
+
+        /*---------------------------------------------------------*\
         | Copy in mode colors_min (data)                            |
         \*---------------------------------------------------------*/
         memcpy(&data_buf[data_ptr], &modes[mode_index].colors_min, sizeof(modes[mode_index].colors_min));
@@ -239,6 +307,15 @@ unsigned char * RGBController::GetDeviceDescription()
         \*---------------------------------------------------------*/
         memcpy(&data_buf[data_ptr], &modes[mode_index].speed, sizeof(modes[mode_index].speed));
         data_ptr += sizeof(modes[mode_index].speed);
+
+        /*---------------------------------------------------------*\
+        | Copy in mode brightness (data) if protocol 3 or higher    |
+        \*---------------------------------------------------------*/
+        if(protocol_version >= 3)
+        {
+            memcpy(&data_buf[data_ptr], &modes[mode_index].brightness, sizeof(modes[mode_index].brightness));
+            data_ptr += sizeof(modes[mode_index].brightness);
+        }
 
         /*---------------------------------------------------------*\
         | Copy in mode direction (data)                             |
@@ -405,7 +482,7 @@ unsigned char * RGBController::GetDeviceDescription()
     return(data_buf);
 }
 
-void RGBController::ReadDeviceDescription(unsigned char* data_buf)
+void RGBController::ReadDeviceDescription(unsigned char* data_buf, unsigned int protocol_version)
 {
     unsigned int data_ptr = 0;
 
@@ -426,6 +503,19 @@ void RGBController::ReadDeviceDescription(unsigned char* data_buf)
 
     name = (char *)&data_buf[data_ptr];
     data_ptr += name_len;
+
+    /*---------------------------------------------------------*\
+    | Copy in vendor if protocol version is 1 or higher         |
+    \*---------------------------------------------------------*/
+    if(protocol_version >= 1)
+    {
+        unsigned short vendor_len;
+        memcpy(&vendor_len, &data_buf[data_ptr], sizeof(unsigned short));
+        data_ptr += sizeof(unsigned short);
+
+        vendor = (char *)&data_buf[data_ptr];
+        data_ptr += vendor_len;
+    }
 
     /*---------------------------------------------------------*\
     | Copy in description                                       |
@@ -522,6 +612,19 @@ void RGBController::ReadDeviceDescription(unsigned char* data_buf)
         data_ptr += sizeof(new_mode.speed_max);
 
         /*---------------------------------------------------------*\
+        | Copy in mode brightness min and max if protocol version   |
+        | is 3 or higher                                            |
+        \*---------------------------------------------------------*/
+        if(protocol_version >= 3)
+        {
+            memcpy(&new_mode.brightness_min, &data_buf[data_ptr], sizeof(new_mode.brightness_min));
+            data_ptr += sizeof(new_mode.brightness_min);
+
+            memcpy(&new_mode.brightness_max, &data_buf[data_ptr], sizeof(new_mode.brightness_max));
+            data_ptr += sizeof(new_mode.brightness_max);
+        }
+
+        /*---------------------------------------------------------*\
         | Copy in mode colors_min (data)                            |
         \*---------------------------------------------------------*/
         memcpy(&new_mode.colors_min, &data_buf[data_ptr], sizeof(new_mode.colors_min));
@@ -538,6 +641,15 @@ void RGBController::ReadDeviceDescription(unsigned char* data_buf)
         \*---------------------------------------------------------*/
         memcpy(&new_mode.speed, &data_buf[data_ptr], sizeof(new_mode.speed));
         data_ptr += sizeof(new_mode.speed);
+
+        /*---------------------------------------------------------*\
+        | Copy in mode brightness if protocol version is 3 or higher|
+        \*---------------------------------------------------------*/
+        if(protocol_version >= 3)
+        {
+            memcpy(&new_mode.brightness, &data_buf[data_ptr], sizeof(new_mode.brightness));
+            data_ptr += sizeof(new_mode.brightness);
+        }
 
         /*---------------------------------------------------------*\
         | Copy in mode direction (data)                             |
@@ -737,7 +849,7 @@ void RGBController::ReadDeviceDescription(unsigned char* data_buf)
     SetupColors();
 }
 
-unsigned char * RGBController::GetModeDescription(int mode)
+unsigned char * RGBController::GetModeDescription(int mode, unsigned int protocol_version)
 {
     unsigned int data_ptr = 0;
     unsigned int data_size = 0;
@@ -759,9 +871,18 @@ unsigned char * RGBController::GetModeDescription(int mode)
     data_size += sizeof(modes[mode].flags);
     data_size += sizeof(modes[mode].speed_min);
     data_size += sizeof(modes[mode].speed_max);
+    if(protocol_version >= 3)
+    {
+        data_size += sizeof(modes[mode].brightness_min);
+        data_size += sizeof(modes[mode].brightness_max);
+    }
     data_size += sizeof(modes[mode].colors_min);
     data_size += sizeof(modes[mode].colors_max);
     data_size += sizeof(modes[mode].speed);
+    if(protocol_version >= 3)
+    {
+        data_size += sizeof(modes[mode].brightness);
+    }
     data_size += sizeof(modes[mode].direction);
     data_size += sizeof(modes[mode].color_mode);
     data_size += sizeof(mode_num_colors);
@@ -818,6 +939,19 @@ unsigned char * RGBController::GetModeDescription(int mode)
     data_ptr += sizeof(modes[mode].speed_max);
 
     /*---------------------------------------------------------*\
+    | Copy in mode brightness min and max if protocol version   |
+    | is 3 or higher                                            |
+    \*---------------------------------------------------------*/
+    if(protocol_version >= 3)
+    {
+        memcpy(&data_buf[data_ptr], &modes[mode].brightness_min, sizeof(modes[mode].brightness_min));
+        data_ptr += sizeof(modes[mode].brightness_min);
+
+        memcpy(&data_buf[data_ptr], &modes[mode].brightness_max, sizeof(modes[mode].brightness_max));
+        data_ptr += sizeof(modes[mode].brightness_max);
+    }
+
+    /*---------------------------------------------------------*\
     | Copy in mode colors_min (data)                            |
     \*---------------------------------------------------------*/
     memcpy(&data_buf[data_ptr], &modes[mode].colors_min, sizeof(modes[mode].colors_min));
@@ -835,6 +969,15 @@ unsigned char * RGBController::GetModeDescription(int mode)
     memcpy(&data_buf[data_ptr], &modes[mode].speed, sizeof(modes[mode].speed));
     data_ptr += sizeof(modes[mode].speed);
 
+    /*---------------------------------------------------------*\
+    | Copy in mode brightness if protocol version is 3 or higher|
+    \*---------------------------------------------------------*/
+    if(protocol_version >= 3)
+    {
+        memcpy(&data_buf[data_ptr], &modes[mode].brightness, sizeof(modes[mode].brightness));
+        data_ptr += sizeof(modes[mode].brightness);
+    }
+    
     /*---------------------------------------------------------*\
     | Copy in mode direction (data)                             |
     \*---------------------------------------------------------*/
@@ -868,7 +1011,7 @@ unsigned char * RGBController::GetModeDescription(int mode)
     return(data_buf);
 }
 
-void RGBController::SetModeDescription(unsigned char* data_buf)
+void RGBController::SetModeDescription(unsigned char* data_buf, unsigned int protocol_version)
 {
     int mode_idx;
     unsigned int data_ptr = sizeof(unsigned int);
@@ -932,6 +1075,19 @@ void RGBController::SetModeDescription(unsigned char* data_buf)
     data_ptr += sizeof(new_mode->speed_max);
 
     /*---------------------------------------------------------*\
+    | Copy in mode brightness_min and brightness_max (data) if  |
+    | protocol 3 or higher                                      |
+    \*---------------------------------------------------------*/
+    if(protocol_version >= 3)
+    {
+        memcpy(&new_mode->brightness_min, &data_buf[data_ptr], sizeof(new_mode->brightness_min));
+        data_ptr += sizeof(new_mode->brightness_min);
+
+        memcpy(&new_mode->brightness_max, &data_buf[data_ptr], sizeof(new_mode->brightness_max));
+        data_ptr += sizeof(new_mode->brightness_max);
+    }
+    
+    /*---------------------------------------------------------*\
     | Copy in mode colors_min (data)                            |
     \*---------------------------------------------------------*/
     memcpy(&new_mode->colors_min, &data_buf[data_ptr], sizeof(new_mode->colors_min));
@@ -949,6 +1105,15 @@ void RGBController::SetModeDescription(unsigned char* data_buf)
     memcpy(&new_mode->speed, &data_buf[data_ptr], sizeof(new_mode->speed));
     data_ptr += sizeof(new_mode->speed);
 
+    /*---------------------------------------------------------*\
+    | Copy in mode brightness (data) if protocol 3 or higher    |
+    \*---------------------------------------------------------*/
+    if(protocol_version >= 3)
+    {
+        memcpy(&new_mode->brightness, &data_buf[data_ptr], sizeof(new_mode->brightness));
+        data_ptr += sizeof(new_mode->brightness);
+    }
+    
     /*---------------------------------------------------------*\
     | Copy in mode direction (data)                             |
     \*---------------------------------------------------------*/
@@ -1332,6 +1497,12 @@ void RGBController::UnregisterUpdateCallback(void * callback_arg)
     }
 }
 
+void RGBController::ClearCallbacks()
+{
+    UpdateCallbacks.clear();
+    UpdateCallbackArgs.clear();
+}
+
 void RGBController::SignalUpdate()
 {
     UpdateMutex.lock();
@@ -1358,6 +1529,11 @@ void RGBController::UpdateMode()
     CallFlag_UpdateMode = true;
 }
 
+void RGBController::SaveMode()
+{
+    DeviceSaveMode();
+}
+
 void RGBController::DeviceUpdateLEDs()
 {
 
@@ -1377,19 +1553,26 @@ void RGBController::DeviceCallThreadFunction()
     {
         if(CallFlag_UpdateMode.load() == true)
         {
-            DeviceUpdateMode();
             CallFlag_UpdateMode = false;
+            DeviceUpdateMode();
         }
         if(CallFlag_UpdateLEDs.load() == true)
         {
-            DeviceUpdateLEDs();
             CallFlag_UpdateLEDs = false;
+            DeviceUpdateLEDs();
         }
         else
         {
            std::this_thread::sleep_for(1ms);
         }
     }
+}
+
+void RGBController::DeviceSaveMode()
+{
+    /*-------------------------------------------------*\
+    | If not implemented by controller, does nothing    |
+    \*-------------------------------------------------*/
 }
 
 std::string device_type_to_str(device_type type)
@@ -1418,6 +1601,12 @@ std::string device_type_to_str(device_type type)
         return "Headset Stand";
     case DEVICE_TYPE_GAMEPAD:
         return "Gamepad";
+    case DEVICE_TYPE_LIGHT:
+        return "Light";
+    case DEVICE_TYPE_SPEAKER:
+        return "Speaker";
+    case DEVICE_TYPE_VIRTUAL:
+        return "Virtual";
     default:
         return "Unknown";
     }

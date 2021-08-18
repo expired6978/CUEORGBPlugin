@@ -22,7 +22,7 @@ typedef unsigned int RGBColor;
 #define RGBGetGValue(rgb)   ((rgb >> 8) & 0x000000FF)
 #define RGBGetBValue(rgb)   ((rgb >> 16) & 0x000000FF)
 
-#define ToRGBColor(r, g, b) ((b << 16) | (g << 8) | (r))
+#define ToRGBColor(r, g, b) ((RGBColor)((b << 16) | (g << 8) | (r)))
 
 /*------------------------------------------------------------------*\
 | Mode Flags                                                         |
@@ -37,6 +37,8 @@ enum
     MODE_FLAG_HAS_PER_LED_COLOR         = (1 << 5), /* Mode has per-LED colors          */
     MODE_FLAG_HAS_MODE_SPECIFIC_COLOR   = (1 << 6), /* Mode has mode specific colors    */
     MODE_FLAG_HAS_RANDOM_COLOR          = (1 << 7), /* Mode has random color option     */
+    MODE_FLAG_MANUAL_SAVE               = (1 << 8), /* Mode can manually be saved       */
+    MODE_FLAG_AUTOMATIC_SAVE            = (1 << 9), /* Mode automatically saves         */
 };
 
 /*------------------------------------------------------------------*\
@@ -61,10 +63,11 @@ enum
 };
 
 /*------------------------------------------------------------------*\
-| Mode Type                                                          |
+| Mode Class                                                         |
 \*------------------------------------------------------------------*/
-typedef struct
+class mode
 {
+public:
     /*--------------------------------------------------------------*\
     | Mode Information                                               |
     \*--------------------------------------------------------------*/
@@ -73,6 +76,8 @@ typedef struct
     unsigned int        flags;  /* Mode flags bitfield              */
     unsigned int        speed_min;  /* speed minimum value          */
     unsigned int        speed_max;  /* speed maximum value          */
+    unsigned int        brightness_min; /*brightness min value      */
+    unsigned int        brightness_max; /*brightness max value      */
     unsigned int        colors_min; /* minimum number of mode colors*/
     unsigned int        colors_max; /* maximum numver of mode colors*/
     
@@ -80,11 +85,18 @@ typedef struct
     | Mode Settings                                                  |
     \*--------------------------------------------------------------*/
     unsigned int        speed;  /* Mode speed parameter value       */
+    unsigned int        brightness; /* Mode brightness value        */
     unsigned int        direction;  /* Mode direction value         */
     unsigned int        color_mode; /* Mode color selection         */
     std::vector<RGBColor>
                         colors; /* mode-specific colors             */
-} mode;
+
+    /*--------------------------------------------------------------*\
+    | Mode Constructor / Destructor                                  |
+    \*--------------------------------------------------------------*/
+    mode();
+    ~mode();
+};
 
 typedef struct
 {
@@ -116,6 +128,9 @@ enum
     DEVICE_TYPE_HEADSET,
     DEVICE_TYPE_HEADSET_STAND,
     DEVICE_TYPE_GAMEPAD,
+    DEVICE_TYPE_LIGHT,
+    DEVICE_TYPE_SPEAKER,
+    DEVICE_TYPE_VIRTUAL,
     DEVICE_TYPE_UNKNOWN
 };
 
@@ -143,10 +158,70 @@ typedef struct
 
 typedef void (*RGBControllerCallback)(void *);
 
-class RGBController
+class RGBControllerInterface
+{
+public:
+    virtual void            SetupColors()                                                                       = 0;
+
+    virtual RGBColor        GetLED(unsigned int led)                                                            = 0;
+    virtual void            SetLED(unsigned int led, RGBColor color)                                            = 0;
+    virtual void            SetAllLEDs(RGBColor color)                                                          = 0;
+    virtual void            SetAllZoneLEDs(int zone, RGBColor color)                                            = 0;
+
+    virtual int             GetMode()                                                                           = 0;
+    virtual void            SetMode(int mode)                                                                   = 0;
+
+    virtual unsigned char * GetDeviceDescription(unsigned int protocol_version)                                 = 0;
+    virtual void            ReadDeviceDescription(unsigned char* data_buf, unsigned int protocol_version)       = 0;
+
+    virtual unsigned char * GetModeDescription(int mode, unsigned int protocol_version)                         = 0;
+    virtual void            SetModeDescription(unsigned char* data_buf, unsigned int protocol_version)          = 0;
+
+    virtual unsigned char * GetColorDescription()                                                               = 0;
+    virtual void            SetColorDescription(unsigned char* data_buf)                                        = 0;
+
+    virtual unsigned char * GetZoneColorDescription(int zone)                                                   = 0;
+    virtual void            SetZoneColorDescription(unsigned char* data_buf)                                    = 0;
+
+    virtual unsigned char * GetSingleLEDColorDescription(int led)                                               = 0;
+    virtual void            SetSingleLEDColorDescription(unsigned char* data_buf)                               = 0;
+
+    virtual void            RegisterUpdateCallback(RGBControllerCallback new_callback, void * new_callback_arg) = 0;
+    virtual void            UnregisterUpdateCallback(void * callback_arg)                                       = 0;
+    virtual void            ClearCallbacks()                                                                    = 0;
+    virtual void            SignalUpdate()                                                                      = 0;
+
+    virtual void            UpdateLEDs()                                                                        = 0;
+    //virtual void          UpdateZoneLEDs(int zone)                                                            = 0;
+    //virtual void          UpdateSingleLED(int led)                                                            = 0;
+
+    virtual void            UpdateMode()                                                                        = 0;
+    virtual void            SaveMode()                                                                          = 0;
+
+    virtual void            DeviceCallThreadFunction()                                                          = 0;
+
+    /*---------------------------------------------------------*\
+    | Functions to be implemented in device implementation      |
+    \*---------------------------------------------------------*/
+    virtual void            SetupZones()                                                                        = 0;
+
+    virtual void            ResizeZone(int zone, int new_size)                                                  = 0;
+
+    virtual void            DeviceUpdateLEDs()                                                                  = 0;
+    virtual void            UpdateZoneLEDs(int zone)                                                            = 0;
+    virtual void            UpdateSingleLED(int led)                                                            = 0;
+
+    virtual void            DeviceUpdateMode()                                                                  = 0;
+    virtual void            DeviceSaveMode()                                                                    = 0;
+
+    virtual void            SetCustomMode()                                                                     = 0;
+};
+
+class RGBController : public RGBControllerInterface
 {
 public:
     std::string             name;           /* controller name          */
+    std::string             vendor;         /* controller vendor        */
     std::string             description;    /* controller description   */
     std::string             version;        /* controller version       */
     std::string             serial;         /* controller serial number */
@@ -177,11 +252,11 @@ public:
     int                     GetMode();
     void                    SetMode(int mode);
 
-    unsigned char *         GetDeviceDescription();
-    void                    ReadDeviceDescription(unsigned char* data_buf);
+    unsigned char *         GetDeviceDescription(unsigned int protocol_version);
+    void                    ReadDeviceDescription(unsigned char* data_buf, unsigned int protocol_version);
 
-    unsigned char *         GetModeDescription(int mode);
-    void                    SetModeDescription(unsigned char* data_buf);
+    unsigned char *         GetModeDescription(int mode, unsigned int protocol_version);
+    void                    SetModeDescription(unsigned char* data_buf, unsigned int protocol_version);
 
     unsigned char *         GetColorDescription();
     void                    SetColorDescription(unsigned char* data_buf);
@@ -194,6 +269,7 @@ public:
 
     void                    RegisterUpdateCallback(RGBControllerCallback new_callback, void * new_callback_arg);
     void                    UnregisterUpdateCallback(void * callback_arg);
+    void                    ClearCallbacks();
     void                    SignalUpdate();
 
     void                    UpdateLEDs();
@@ -201,6 +277,7 @@ public:
     //void                    UpdateSingleLED(int led);
 
     void                    UpdateMode();
+    void                    SaveMode();
 
     void                    DeviceCallThreadFunction();
 
@@ -216,6 +293,7 @@ public:
     virtual void            UpdateSingleLED(int led)                    = 0;
 
     virtual void            DeviceUpdateMode()                          = 0;
+    void                    DeviceSaveMode();
 
     virtual void            SetCustomMode()                             = 0;
 

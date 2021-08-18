@@ -28,8 +28,10 @@ public:
     bool            GetConnected();
     const char *    GetIP();
     unsigned short  GetPort();
+    unsigned int    GetProtocolVersion();
     bool            GetOnline();
 
+    void            ClearCallbacks();
     void            RegisterClientInfoChangeCallback(NetClientCallback new_callback, void * new_callback_arg);
 
     void            SetIP(const char *new_ip);
@@ -46,12 +48,15 @@ public:
     
     void        ProcessReply_ControllerCount(unsigned int data_size, char * data);
     void        ProcessReply_ControllerData(unsigned int data_size, char * data, unsigned int dev_idx);
+    void        ProcessReply_ProtocolVersion(unsigned int data_size, char * data);
+
     void        ProcessRequest_DeviceListChanged();
 
     void        SendData_ClientString();
 
     void        SendRequest_ControllerCount();
     void        SendRequest_ControllerData(unsigned int dev_idx);
+    void        SendRequest_ProtocolVersion();
 
     void        SendRequest_RGBController_ResizeZone(unsigned int dev_idx, int zone, int new_size);
 
@@ -62,6 +67,15 @@ public:
     void        SendRequest_RGBController_SetCustomMode(unsigned int dev_idx);
 
     void        SendRequest_RGBController_UpdateMode(unsigned int dev_idx, unsigned char * data, unsigned int size);
+    void        SendRequest_RGBController_SaveMode(unsigned int dev_idx, unsigned char * data, unsigned int size);
+
+
+    std::vector<std::string> * ProcessReply_ProfileList(unsigned int data_size, char * data);
+
+    void        SendRequest_GetProfileList();
+    void        SendRequest_LoadProfile(std::string profile_name);
+    void        SendRequest_SaveProfile(std::string profile_name);
+    void        SendRequest_DeleteProfile(std::string profile_name);
 
     std::vector<RGBController *>  server_controllers;
 
@@ -83,7 +97,10 @@ private:
     bool            server_initialized;
     unsigned int    server_controller_count;
     bool            server_controller_count_received;
+    unsigned int    server_protocol_version;
+    bool            server_protocol_version_received;
     bool            change_in_progress;
+    std::mutex      SendLock;
 
     std::thread *   ConnectionThread;
     std::thread *   ListenThread;
