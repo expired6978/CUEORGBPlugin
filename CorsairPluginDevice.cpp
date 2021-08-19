@@ -376,7 +376,7 @@ bool CorsairPluginDevice::ReadZonesFromJson(const json& zone)
 void CorsairPluginDevice::GetDeviceInfoFromJson(const json& settings, const json& devices)
 {
 	mDeviceInfo.deviceName = mController->name;
-	mDeviceInfo.deviceId = mController->location;
+	mDeviceInfo.deviceId = mDeviceHasher ? mDeviceHasher(mController->location) : mController->location;
 
 	auto deviceTypeName = device_type_to_str(mController->type);
 	if (settings.contains("Defaults"))

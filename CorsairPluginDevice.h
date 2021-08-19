@@ -68,6 +68,7 @@ public:
 
 	bool ReadFromJson(const nlohmann::json& settings, const nlohmann::json& devices, bool clear = false);
 	void SetImageHasher(std::function<std::string(const std::string&)> functor) { mImageHasher = functor; };
+	void SetDeviceHasher(std::function<std::string(const std::string&)> functor) { mDeviceHasher = functor; }
 
 	typedef std::unordered_map<std::uint32_t, std::uint32_t> ResizeMap;
 	ResizeMap& GetResizeMap() { return mZoneResize; }
@@ -84,6 +85,7 @@ private:
 	ResizeMap mZoneResize;
 	RGBController* mController;
 	std::function<std::string(const std::string&)> mImageHasher;
+	std::function<std::string(const std::string&)> mDeviceHasher;
 	DeviceInfo mDeviceInfo;
 	DeviceViews mDeviceViews;
 };

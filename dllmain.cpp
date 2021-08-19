@@ -61,6 +61,11 @@ std::wstring GetLocalFile(const std::wstring& relativePath)
 	return path;
 }
 
+std::string GetDeviceHash(const std::string& deviceId)
+{
+	return picosha2::hash256_hex_string(deviceId);
+}
+
 std::string GetImageHash(const std::string& relativePath)
 {
 	size_t reqLength = ::MultiByteToWideChar(CP_UTF8, 0, relativePath.c_str(), (std::int32_t)relativePath.length(), 0, 0);
@@ -132,7 +137,11 @@ void CorsairPluginFreeDeviceView(cue::dev::plugin::DeviceView* deviceView)
 void CorsairSubscribeForDeviceConnectionStatusChanges(void* context, _DeviceConnectionStatusChangeCallback deviceStatusCallback)
 {
 	OutputDebugMessage("CorsairSubscribeForDeviceConnectionStatusChanges: %08X - %08X", context, deviceStatusCallback);
-	g_deviceManager = std::make_unique<CorsairPluginDeviceManager>(context, deviceStatusCallback, GetImageHash, GetLocalFile);
+	g_deviceManager = std::make_unique<CorsairPluginDeviceManager>(context, deviceStatusCallback, 
+		GetImageHash,
+		GetDeviceHash,
+		GetLocalFile
+	);
 	g_deviceManager->Start();
 }
 

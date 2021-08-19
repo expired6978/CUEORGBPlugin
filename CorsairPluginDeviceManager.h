@@ -21,6 +21,7 @@ class CorsairPluginDeviceManager
 public:
 	CorsairPluginDeviceManager(void* pluginContext, _DeviceConnectionStatusChangeCallback callback,
 		std::function<std::string(const std::string&)> imageHasher,
+		std::function<std::string(const std::string&)> deviceHasher,
 		std::function<std::wstring(const std::wstring&)> localPath);
 	virtual ~CorsairPluginDeviceManager();
 
@@ -51,5 +52,6 @@ private:
 	std::vector<RGBController*> mControllerList;
 
 	std::function<std::string(const std::string&)> mImageHasher;
+	std::function<std::string(const std::string&)> mDeviceHasher;
 	std::function<std::wstring(const std::wstring&)> mLocalFile;
 };

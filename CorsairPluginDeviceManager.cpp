@@ -14,11 +14,13 @@ void ClientChanged(void* arg)
 
 CorsairPluginDeviceManager::CorsairPluginDeviceManager(void* pluginContext, _DeviceConnectionStatusChangeCallback callback,
 	std::function<std::string(const std::string&)> imageHasher,
+	std::function<std::string(const std::string&)> deviceHasher,
 	std::function<std::wstring(const std::wstring&)> localPath)
 	: mPluginContext(pluginContext)
 	, mDeviceCallback(callback)
 	, mNetworkClient(std::make_unique<NetworkClient>(mControllerList))
 	, mImageHasher(imageHasher)
+	, mDeviceHasher(deviceHasher)
 	, mLocalFile(localPath)
 {
 	mNetworkClient->RegisterClientInfoChangeCallback(ClientChanged, this);
@@ -183,6 +185,7 @@ void CorsairPluginDeviceManager::ConnectDevices()
 	{
 		std::unique_ptr<CorsairPluginDevice> device = std::make_unique<CorsairPluginDevice>(controller);
 		device->SetImageHasher(mImageHasher);
+		device->SetDeviceHasher(mDeviceHasher);
 		if (device->ReadFromJson(mSettings, mDevices))
 		{
 			// Device needs a resize, send the resize packet and re-request the controller data

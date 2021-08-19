@@ -50,7 +50,7 @@ std::string GetImageHash(const std::string& relativePath)
 
 int main()
 {
-	g_deviceManager = std::make_unique<CorsairPluginDeviceManager>(nullptr, DeviceConnectionStatusChangeCallback, GetImageHash, GetLocalFile);
+	g_deviceManager = std::make_unique<CorsairPluginDeviceManager>(nullptr, DeviceConnectionStatusChangeCallback, GetImageHash, nullptr, GetLocalFile);
 	g_deviceManager->Start();
 
 	std::string deviceCommand;
