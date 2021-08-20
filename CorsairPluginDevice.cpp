@@ -403,12 +403,26 @@ void CorsairPluginDevice::GetDeviceInfoFromJson(const json& settings, const json
 	json device;
 	for (const auto& deviceObject : devices)
 	{
-		if (mDeviceInfo.deviceName == deviceObject["Name"])
+		// Match device by location
+		if (deviceObject.contains("Location") && mController->location == deviceObject["Location"])
+		{
+			// Allow the device to be renamed if the Location is specified
+			if (deviceObject.contains("Name"))
+			{
+				mDeviceInfo.deviceName = deviceObject["Name"];
+			}
+			device = deviceObject;
+			break;
+		}
+
+		// Match device by name
+		if (deviceObject.contains("Name") && mDeviceInfo.deviceName == deviceObject["Name"])
 		{
 			device = deviceObject;
 			break;
 		}
 	}
+
 	if (device.is_object())
 	{
 		if (device.contains("InheritDefault"))
@@ -524,12 +538,21 @@ bool CorsairPluginDevice::GetDeviceViewFromJson(const json& settings, const json
 	json device;
 	for (const auto& deviceObject : devices)
 	{
-		if (mController->name == deviceObject["Name"])
+		// Match device by location
+		if (deviceObject.contains("Location") && mController->location == deviceObject["Location"])
+		{
+			device = deviceObject;
+			break;
+		}
+
+		// Match device by name
+		if (deviceObject.contains("Name") && mDeviceInfo.deviceName == deviceObject["Name"])
 		{
 			device = deviceObject;
 			break;
 		}
 	}
+
 	if (device.is_object())
 	{
 		if (device.contains("InheritDefault"))
