@@ -332,28 +332,30 @@ bool CorsairPluginDevice::ReadZonesFromJson(const json& zone)
 	}
 	else
 	{
-		std::function<void(LEDData&, std::uint32_t, std::uint32_t)> patternFunc = [](LEDData& ledData, std::uint32_t led, std::uint32_t count)
+		std::uint32_t multiplier = zone.value<std::uint32_t>("Multiplier", 1);
+
+		std::function<void(LEDData&, std::uint32_t, std::uint32_t, std::uint32_t)> patternFunc = [](LEDData& ledData, std::uint32_t led, std::uint32_t count, std::uint32_t multiplier)
 		{
-			ledData.x = std::sin(2 * M_PI * (led + 1) / count) + 1;
-			ledData.y = std::cos(2 * M_PI * (led + 1) / count) + 1;
+			ledData.x = (std::sin(2 * M_PI * (led + 1) / count) + 1) * multiplier;
+			ledData.y = (std::cos(2 * M_PI * (led + 1) / count) + 1) * multiplier;
 		};
 
 		if (zone.contains("Pattern"))
 		{
 			if (zone["Pattern"] == "LinearX")
 			{
-				patternFunc = [](LEDData& ledData, std::uint32_t led, std::uint32_t count)
+				patternFunc = [](LEDData& ledData, std::uint32_t led, std::uint32_t count, std::uint32_t multiplier)
 				{
-					ledData.x = (double)led / (double)count;
-					ledData.y = 1.0;
+					ledData.x = ((double)led / (double)count) * multiplier;
+					ledData.y = 0.0;
 				};
 			}
 			else if (zone["Pattern"] == "LinearY")
 			{
-				patternFunc = [](LEDData& ledData, std::uint32_t led, std::uint32_t count)
+				patternFunc = [](LEDData& ledData, std::uint32_t led, std::uint32_t count, std::uint32_t multiplier)
 				{
-					ledData.x = 1.0;
-					ledData.y = (double)led / (double)count;
+					ledData.x = 0.0;
+					ledData.y = ((double)led / (double)count) * multiplier;
 				};
 			}
 		}
@@ -366,7 +368,7 @@ bool CorsairPluginDevice::ReadZonesFromJson(const json& zone)
 			auto& ledMapping = mDeviceInfo.ledMapping[ledId];
 			ledMapping.first = zoneIndex;
 			ledMapping.second = led;
-			patternFunc(ledData, led, ledCount);
+			patternFunc(ledData, led, ledCount, multiplier);
 		}
 	}
 

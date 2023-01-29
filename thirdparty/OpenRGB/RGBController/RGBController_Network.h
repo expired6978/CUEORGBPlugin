@@ -28,8 +28,6 @@ public:
     void        DeviceUpdateMode();
     void        DeviceSaveMode();
 
-    void        UpdateLEDs();
-
 private:
     NetworkClient *     client;
     unsigned int        dev_idx;

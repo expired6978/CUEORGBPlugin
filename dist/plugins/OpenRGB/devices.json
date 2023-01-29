@@ -1,26 +1,42 @@
 [
 	{
-		"Name": "TRX40 AORUS PRO WIFI",
+		"Name": "ASUS ROG ZENITH II EXTREME ALPHA",
 		"Thumbnail": "images/motherboard/default/thumbnail.png",
 		"Image": "images/motherboard/default/promo.png",
 		"InheritDefault": false,
 		"Zones": [
-			{"Zone": "Motherboard"},
-			{"Zone": "D_LED1 Bottom"},
-			{"Zone": "D_LED2 Top"}
+			{"Zone": "Aura Mainboard"},
+			{"Zone": "Aura Addressable 1", "Size": 27, "Pattern": "LinearY", "Multiplier": 540},
+			{"Zone": "Aura Addressable 2", "Size": 28, "Pattern": "LinearY", "Multiplier": 560},
+			{"Zone": "Aura Addressable 3", "LEDs": [
+				{"Id": 200, "Index": 0, "Position": [0, 0]},
+				{"Id": 201, "Index": 1, "Position": [0, 20]},
+				{"Id": 202, "Index": 2, "Position": [0, 40]},
+				{"Id": 203, "Index": 3, "Position": [0, 60]},
+				{"Id": 204, "Index": 4, "Position": [0, 80]},
+				{"Id": 205, "Index": 5, "Position": [0, 100]},
+				{"Id": 206, "Index": 6, "Position": [0, 120]},
+				{"Id": 207, "Index": 7, "Position": [0, 140]},
+				{"Id": 208, "Index": 8, "Position": [0, 160]},
+				{"Id": 209, "Index": 9, "Position": [0, 180]}
+			]}
 		],
 		"Views": [
 			{
 				"Image": "images/motherboard/default/device_view.png",
-				"PolyGenerator": {"Zone": "Motherboard", "Rect": [0, 300, 300, 340], "Spacing": 5}
+				"PolyGenerator": {"Zone": "Aura Mainboard", "Rect": [0, 300, 300, 340], "Spacing": 5}
 			},
 			{
 				"Image": "images/motherboard/default/device_view.png",
-				"PolyGenerator": {"Zone": "D_LED1 Bottom", "Rect": [0, 300, 300, 340], "Spacing": 5}
+				"PolyGenerator": {"Zone": "Aura Addressable 1", "Rect": [0, 300, 300, 340], "Spacing": 2}
 			},
 			{
 				"Image": "images/motherboard/default/device_view.png",
-				"PolyGenerator": {"Zone": "D_LED2 Top", "Rect": [0, 300, 300, 340], "Spacing": 5}
+				"PolyGenerator": {"Zone": "Aura Addressable 2", "Rect": [0, 300, 300, 340], "Spacing": 2}
+			},
+			{
+				"Image": "images/motherboard/default/device_view.png",
+				"PolyGenerator": {"Zone": "Aura Addressable 3", "Rect": [0, 300, 300, 340], "Spacing": 5}
 			}
 		]
 	}

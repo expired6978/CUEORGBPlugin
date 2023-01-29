@@ -22,16 +22,15 @@ CorsairPluginDeviceManager::CorsairPluginDeviceManager(void* pluginContext, _Dev
 	, mImageHasher(imageHasher)
 	, mDeviceHasher(deviceHasher)
 	, mLocalFile(localPath)
+	, mServicing(true)
 {
 	mNetworkClient->RegisterClientInfoChangeCallback(ClientChanged, this);
 }
 
 CorsairPluginDeviceManager::~CorsairPluginDeviceManager()
 {
-	if (mNetworkClient)
-	{
-		mNetworkClient->StopClient();
-	}
+	Stop();
+
 	if (mDeviceUpdateRequest.valid())
 	{
 		mDeviceUpdateRequest.wait();
@@ -60,22 +59,58 @@ void CorsairPluginDeviceManager::Start()
 		}
 
 		mNetworkClient->StartClient();
+
+		mServicing = true;
+		mQueueServiceThread = std::make_unique<std::thread>(&CorsairPluginDeviceManager::ServiceThreadFunction, this);
 	}
 }
 
 void CorsairPluginDeviceManager::Stop()
 {
 	mNetworkClient->StopClient();
+	mServicing = false;
+	if (mQueueServiceThread)
+	{
+		mQueueServiceThread->join();
+	}
+}
+
+void CorsairPluginDeviceManager::ServiceThreadFunction()
+{
+	while (mServicing)
+	{
+		mQueueLock.lock();
+		std::unique_ptr<SetColorData> colorQueue = nullptr;
+		if (!mColorQueue.empty()) {
+			colorQueue = std::move(mColorQueue.front());
+			mColorQueue.pop();
+		}
+		mQueueLock.unlock();
+		
+		if (colorQueue) {
+			_SetColor(colorQueue->mDeviceId.c_str(), colorQueue->mLEDs.size(), &colorQueue->mLEDs.at(0));
+		}
+
+		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+	}
 }
 
 bool CorsairPluginDeviceManager::SetColor(const char* deviceId, std::int32_t size, cue::dev::plugin::LedColor* ledsColors)
 {
+	mQueueLock.lock();
+	mColorQueue.push(std::make_unique<SetColorData>(deviceId, std::vector<cue::dev::plugin::LedColor>(ledsColors, ledsColors + size)));
+	mQueueLock.unlock();
+	return true;
+}
+
+bool CorsairPluginDeviceManager::_SetColor(const char* deviceId, std::int32_t size, cue::dev::plugin::LedColor* ledsColors)
+{
+	std::lock_guard<std::mutex> controllerLock(mNetworkClient->ControllerListMutex);
 	std::lock_guard<std::mutex> deviceLock(mDeviceLock);
 
 	auto it = mDeviceMap.find(deviceId);
 	if (it != mDeviceMap.end())
 	{
-		mNetworkClient->ControllerListMutex.lock();
 		auto controller = it->second->GetController();
 		for (std::int32_t i = 0; i < size; ++i)
 		{
@@ -88,7 +123,6 @@ bool CorsairPluginDeviceManager::SetColor(const char* deviceId, std::int32_t siz
 				controller->SetLED(controller->zones.at(zoneId).start_idx + zoneIndex, ToRGBColor(ledColor.r, ledColor.g, ledColor.b));
 			}
 		}
-		mNetworkClient->ControllerListMutex.unlock();
 
 		controller->UpdateLEDs();
 		return true;

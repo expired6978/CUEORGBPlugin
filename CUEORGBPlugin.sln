@@ -1,13 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.30503.244
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.32126.317
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CUEORGBPlugin", "CUEORGBPlugin.vcxproj", "{B71258E2-6D34-419A-82C0-E6F822E57902}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "wrapper", "wrapper\wrapper.vcxproj", "{968A2C9E-C3A5-41DF-810F-7770D6106879}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "OpenRGBClient", "OpenRGBClient\OpenRGBClient.vcxproj", "{299ADF00-111D-4EEB-B721-A5EE41FF3B72}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "version_wrapper", "version_wrapper\version_wrapper.vcxproj", "{B6B1125B-DED4-4315-AFA8-B0A0481F1D73}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -25,14 +25,6 @@ Global
 		{B71258E2-6D34-419A-82C0-E6F822E57902}.Release|x64.Build.0 = Release|x64
 		{B71258E2-6D34-419A-82C0-E6F822E57902}.Release|x86.ActiveCfg = Release|Win32
 		{B71258E2-6D34-419A-82C0-E6F822E57902}.Release|x86.Build.0 = Release|Win32
-		{968A2C9E-C3A5-41DF-810F-7770D6106879}.Debug|x64.ActiveCfg = Debug|x64
-		{968A2C9E-C3A5-41DF-810F-7770D6106879}.Debug|x64.Build.0 = Debug|x64
-		{968A2C9E-C3A5-41DF-810F-7770D6106879}.Debug|x86.ActiveCfg = Debug|Win32
-		{968A2C9E-C3A5-41DF-810F-7770D6106879}.Debug|x86.Build.0 = Debug|Win32
-		{968A2C9E-C3A5-41DF-810F-7770D6106879}.Release|x64.ActiveCfg = Release|x64
-		{968A2C9E-C3A5-41DF-810F-7770D6106879}.Release|x64.Build.0 = Release|x64
-		{968A2C9E-C3A5-41DF-810F-7770D6106879}.Release|x86.ActiveCfg = Release|Win32
-		{968A2C9E-C3A5-41DF-810F-7770D6106879}.Release|x86.Build.0 = Release|Win32
 		{299ADF00-111D-4EEB-B721-A5EE41FF3B72}.Debug|x64.ActiveCfg = Debug|x64
 		{299ADF00-111D-4EEB-B721-A5EE41FF3B72}.Debug|x64.Build.0 = Debug|x64
 		{299ADF00-111D-4EEB-B721-A5EE41FF3B72}.Debug|x86.ActiveCfg = Debug|Win32
@@ -41,6 +33,14 @@ Global
 		{299ADF00-111D-4EEB-B721-A5EE41FF3B72}.Release|x64.Build.0 = Release|x64
 		{299ADF00-111D-4EEB-B721-A5EE41FF3B72}.Release|x86.ActiveCfg = Release|Win32
 		{299ADF00-111D-4EEB-B721-A5EE41FF3B72}.Release|x86.Build.0 = Release|Win32
+		{B6B1125B-DED4-4315-AFA8-B0A0481F1D73}.Debug|x64.ActiveCfg = Debug|x64
+		{B6B1125B-DED4-4315-AFA8-B0A0481F1D73}.Debug|x64.Build.0 = Debug|x64
+		{B6B1125B-DED4-4315-AFA8-B0A0481F1D73}.Debug|x86.ActiveCfg = Debug|Win32
+		{B6B1125B-DED4-4315-AFA8-B0A0481F1D73}.Debug|x86.Build.0 = Debug|Win32
+		{B6B1125B-DED4-4315-AFA8-B0A0481F1D73}.Release|x64.ActiveCfg = Release|x64
+		{B6B1125B-DED4-4315-AFA8-B0A0481F1D73}.Release|x64.Build.0 = Release|x64
+		{B6B1125B-DED4-4315-AFA8-B0A0481F1D73}.Release|x86.ActiveCfg = Release|Win32
+		{B6B1125B-DED4-4315-AFA8-B0A0481F1D73}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
