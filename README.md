@@ -17,13 +17,13 @@ This plugin allows creating custom device layouts using json files and custom im
  
 # Release Installation
 * Close iCUE completely by right-clicking in the task bar and pressing `Quit`
-* Copy contents of archive to `C:\Program Files\Corsair\CORSAIR iCUE 4 Software` directly.
+* Copy contents of archive to `C:\Program Files\Corsair\Corsair iCUE5 Software` directly.
 
 # Manual Installation
 * Close iCUE completely by right-clicking in the task bar and pressing `Quit`
-* Copy `dist/plugins` folder to `C:\Program Files\Corsair\CORSAIR iCUE 4 Software`
-* Copy built `dsound.dll` to `C:\Program Files\Corsair\CORSAIR iCUE 4 Software`
-* Copy built `CUEORGBPlugin.dll` to `C:\Program Files\Corsair\CORSAIR iCUE 4 Software\plugins\OpenRGB`
+* Copy `dist/plugins` folder to `C:\Program Files\Corsair\Corsair iCUE5 Software`
+* Copy built `dsound.dll` to `C:\Program Files\Corsair\Corsair iCUE5 Software`
+* Copy built `CUEORGBPlugin.dll` to `C:\Program Files\Corsair\Corsair iCUE5 Software\plugins\OpenRGB`
 
 # OpenRGB Installation
 * Download [OpenRGB x64](https://gitlab.com/CalcProgrammer1/OpenRGB/-/jobs/artifacts/master/download?job=build_windows_64) or [OpenRGB x86](https://gitlab.com/CalcProgrammer1/OpenRGB/-/jobs/artifacts/master/download?job=build_windows_32)
